@@ -1,0 +1,9 @@
+{
+  "block.mca_descendants.decayed_dirt": "Decayed Dirt",
+  "block.mca_descendants.decayed_grass": "Decayed Grass",
+  "creativetab.mca_descendants_tab": "MCA Descendents",
+  "gui.phone.title": "Phone",
+  "gui.phone.noDescendants": "No Descendants Found...",
+  "block.mca_descendants.phone": "Phone",
+  "effect.mca_descendants.spirit": "Spirit"
+}

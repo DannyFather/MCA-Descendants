@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "mca_descendants:block/decayed_dirt"
+  }
+}
