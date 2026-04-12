@@ -8,10 +8,14 @@ import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.effects.ModEffects;
 import net.dannyfather.mca_descendants.util.ModUtils;
 import net.dannyfather.mca_descendants.world.StructureSpawnData;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.ChatType;
+import net.minecraft.network.chat.OutgoingChatMessage;
+import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -63,22 +67,24 @@ import static net.minecraft.ChatFormatting.DARK_AQUA;
 public class MCADescendantsEvents {
     public static final Map<UUID, String> LAST_DEATH_MESSAGE = new HashMap<>();
     public static final Map<UUID, String> LAST_VILLAGER_NAME = new HashMap<>();
-    static int childrenCount;
-    static int grandchildrenCount;
+    public static final Map<UUID, Integer> CHILDREN_COUNT = new HashMap<>();
+    public static final Map<UUID, Integer> GRANDCHILDREN_COUNT = new HashMap<>();
 
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
         if(event.getEntity() instanceof ServerPlayer player && player.level() instanceof ServerLevel serverLevel) {
             if(serverLevel.getLevelData().isHardcore() || !MCADescendantsCommonConfig.HARDCORE_ONLY.get()) {
-                FamilyTree tree = FamilyTree.get(serverLevel);
-                FamilyTreeNode playerNode = tree.getOrCreate(player);
-                childrenCount = playerNode.children().size();
-                grandchildrenCount = getGrandchildren(playerNode,serverLevel).size();
-                String deathMsg = event.getSource().getLocalizedDeathMessage(player).getString();
-                LAST_DEATH_MESSAGE.put(player.getUUID(),deathMsg);
-                String villagerName = PlayerSaveData.get(player).getEntityData().getString("villagerName");
-                LAST_VILLAGER_NAME.put(player.getUUID(),villagerName);
                 if (!ModList.get().isLoaded("sync")) {
+                    FamilyTree tree = FamilyTree.get(serverLevel);
+                    FamilyTreeNode playerNode = tree.getOrEmpty(player.getUUID()).get();
+                    int childrenCount = playerNode.children().size();
+                    CHILDREN_COUNT.put(player.getUUID(),childrenCount);
+                    int grandchildrenCount = getGrandchildren(playerNode,serverLevel).size();
+                    GRANDCHILDREN_COUNT.put(player.getUUID(),grandchildrenCount);
+                    String deathMsg = event.getSource().getLocalizedDeathMessage(player).getString();
+                    LAST_DEATH_MESSAGE.put(player.getUUID(),deathMsg);
+                    String villagerName = PlayerSaveData.get(player).getEntityData().getString("villagerName");
+                    LAST_VILLAGER_NAME.put(player.getUUID(),villagerName);
                     player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY,-1,0,false,false));
                     Entity soul = ModUtils.summonSoul(player,serverLevel);
                     soul.moveTo(player.blockPosition(),player.getYRot(),player.getXRot());
@@ -210,7 +216,7 @@ public class MCADescendantsEvents {
                         }
                     }
                     BlockPos lecternPos = new BlockPos(10, 303, 21);
-                    ModUtils.placeBookOnLectern(tpDim, lecternPos, soulName, childrenCount, grandchildrenCount, serverPlayer);
+                    ModUtils.placeBookOnLectern(tpDim, lecternPos, soulName, CHILDREN_COUNT.get(serverPlayer.getUUID()), GRANDCHILDREN_COUNT.get(serverPlayer.getUUID()), serverPlayer);
                     serverPlayer.setGameMode(GameType.ADVENTURE);
                 }
             }
@@ -223,7 +229,6 @@ public class MCADescendantsEvents {
     public static void TickEvent(LivingEvent.LivingTickEvent event) {
         Entity entity = event.getEntity();
         ResourceKey afterLife = ResourceKey.create(Registries.DIMENSION, new ResourceLocation(MCADescendants.MODID, "afterlife"));
-
         if(entity.level() instanceof ServerLevel serverLevel) {
             Scoreboard scoreboard = serverLevel.getScoreboard();
             Team ghostTeam = scoreboard.getPlayerTeam("ghosts");
@@ -259,7 +264,6 @@ public class MCADescendantsEvents {
             else if(!(entity instanceof Player) && entity.serializeNBT().getString("villagerName").equals("Soul")) {
                 entity.discard();
             }
-
         }
         if(entity.level().dimension() == afterLife) {
             if(entity instanceof Bee bee) {
