@@ -5,5 +5,10 @@
   "gui.phone.title": "Phone",
   "gui.phone.noDescendants": "No Descendants Found...",
   "block.mca_descendants.phone": "Phone",
-  "effect.mca_descendants.spirit": "Spirit"
+  "effect.mca_descendants.spirit": "Spirit",
+  "biome.mca_descendants.limbo": "Limbo",
+  "dimension.mca_descendants.afterlife": "The Afterlife",
+  "item.mca_descendants.villager_grabber": "Swap Villager and Player",
+  "item.mca_descendants.good_villager_grabber": "Swap Villager and Player (Deletes Player)",
+  "item.mca_descendants.evil_villager_grabber": "Swap Villager and Player (Kills Player)"
 }
