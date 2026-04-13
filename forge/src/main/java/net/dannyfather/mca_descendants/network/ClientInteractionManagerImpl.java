@@ -4,12 +4,12 @@ import net.dannyfather.mca_descendants.client.gui.PhoneScreen;
 import net.dannyfather.mca_descendants.network.s2c.OpenGuiRequest;
 import net.dannyfather.mca_descendants.network.s2c.getDescendantResponse;
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.common.Mod;
 
-import static net.dannyfather.mca_descendants.block.ModBlocks.PHONE;
-
+@Mod.EventBusSubscriber(value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ClientInteractionManagerImpl implements ClientInteractionManager {
 
-    @Override
     public void handleGuiRequest(OpenGuiRequest message) {
 
         Minecraft.getInstance().execute(() -> {
