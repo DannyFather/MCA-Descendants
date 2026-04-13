@@ -1,14 +1,8 @@
 package net.dannyfather.mca_descendants.block.custom;
 
-import forge.net.mca.cobalt.network.Message;
-import net.dannyfather.mca_descendants.client.gui.PhoneScreen;
 import net.dannyfather.mca_descendants.network.ModNetwork;
-import net.dannyfather.mca_descendants.network.c2s.getDescendantsRequest;
 import net.dannyfather.mca_descendants.network.s2c.OpenGuiRequest;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -31,7 +25,6 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.stream.Stream;
-
 public class PhoneBlock extends HorizontalDirectionalBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final VoxelShape SHAPE = Stream.of(
