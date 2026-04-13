@@ -15,9 +15,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.common.Mod;
 
 import static net.minecraft.ChatFormatting.DARK_AQUA;
-
 public class EvilVillagerGrabberItem extends Item {
     public EvilVillagerGrabberItem(Properties pProperties) {
         super(pProperties);
