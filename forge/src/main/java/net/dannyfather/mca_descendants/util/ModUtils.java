@@ -8,6 +8,7 @@ import forge.net.mca.entity.ai.Genetics;
 import forge.net.mca.entity.ai.relationship.Gender;
 import forge.net.mca.entity.ai.relationship.RelationshipState;
 import forge.net.mca.network.c2s.VillagerEditorSyncRequest;
+import forge.net.mca.network.s2c.PlayerDataMessage;
 import forge.net.mca.server.world.data.FamilyTree;
 import forge.net.mca.server.world.data.FamilyTreeNode;
 import forge.net.mca.server.world.data.PlayerSaveData;
@@ -39,6 +40,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.Team;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.common.Mod;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -48,22 +51,21 @@ import java.util.stream.Stream;
 
 import static forge.net.mca.entity.ai.Traits.*;
 import static net.dannyfather.mca_descendants.events.MCADescendantsEvents.LAST_DEATH_MESSAGE;
-
 public class ModUtils {
-    public static void swapVillagerAndPlayer(LivingEntity target, Player pPlayer) {
-        if (pPlayer.level() instanceof ServerLevel serverLevel && pPlayer instanceof ServerPlayer serverPlayer) {
+    public static void swapVillagerAndPlayer(LivingEntity target, ServerPlayer pPlayer) {
+        if (pPlayer.level() instanceof ServerLevel serverLevel) {
             if (target instanceof VillagerEntityMCA villagerEntityMCA) {
                 //villager to player
                 FamilyTree tree = FamilyTree.get(serverLevel);
-                CompoundTag playerVillagerData = VillagerLike.toVillager(serverPlayer).asEntity().serializeNBT();
+                CompoundTag playerVillagerData = VillagerLike.toVillager(pPlayer).asEntity().serializeNBT();
                 CompoundTag villagerMCAData = villagerEntityMCA.serializeNBT();
                 playerVillagerData.remove("UUID");
                 playerVillagerData.putUUID("UUID", target.getUUID());
                 if (!villagerMCAData.getString("custom_skin").isEmpty()) {
                     villagerMCAData.putInt("playerModel", 1);
                 }
-                if (PlayerSaveData.get(serverPlayer).getEntityData().getInt("playerModel") >= 1) {
-                    playerVillagerData.putString("custom_skin", serverPlayer.getName().getString());
+                if (PlayerSaveData.get(pPlayer).getEntityData().getInt("playerModel") >= 1) {
+                    playerVillagerData.putString("custom_skin", pPlayer.getName().getString());
                 }
                 //player into villager
                 Entity newVillagerEntity = EntityType.loadEntityRecursive(playerVillagerData, serverLevel, (e) -> {
@@ -72,16 +74,28 @@ public class ModUtils {
                 newVillagerEntity.moveTo(target.getOnPos().above(), target.getYRot(), target.getXRot());
                 villagerEntityMCA.discard();
                 serverLevel.addFreshEntity(newVillagerEntity);
-                NetworkHandler.sendToServer(new VillagerEditorSyncRequest("sync", pPlayer.getUUID(), villagerMCAData));
-                serverPlayer.setCustomName(villagerEntityMCA.getCustomName());
+                serverLevel.players().forEach(p ->
+                        NetworkHandler.sendToPlayer(
+                                new PlayerDataMessage(pPlayer.getUUID(), villagerMCAData),
+                                p
+                        )
+                );
+                PlayerSaveData.get(pPlayer).setEntityData(villagerMCAData);
+
+                pPlayer.setCustomName(villagerEntityMCA.getCustomName());
 
                 //
                 //Family Tree Stuff
                 //
-
-                //swap parents
                 FamilyTreeNode playerNode = tree.getOrEmpty(pPlayer.getUUID()).orElse(null);
                 FamilyTreeNode villagerNode = tree.getOrEmpty(target.getUUID()).orElse(null);
+                Gender playerNodeGender = playerNode.gender();
+                Gender villagerNodeGender = villagerNode.gender();
+                villagerNode.setGender(playerNodeGender);
+                playerNode.setGender(villagerNodeGender);
+
+                //swap parents
+
                 FamilyTreeNode pFather = tree.getOrEmpty(playerNode.father()).orElse(null);
                 FamilyTreeNode pMother = tree.getOrEmpty(playerNode.mother()).orElse(null);
                 FamilyTreeNode vFather = tree.getOrEmpty(villagerNode.father()).orElse(null);
@@ -166,16 +180,16 @@ public class ModUtils {
         }
     }
 
-    public static void evilSwapVillagerAndPlayer(LivingEntity target, Player pPlayer) {
+    public static void evilSwapVillagerAndPlayer(LivingEntity target, ServerPlayer pPlayer) {
         UUID villagerUUID = target.getUUID();
         swapVillagerAndPlayer(target, pPlayer);
-        if (pPlayer.level() instanceof ServerLevel serverLevel && pPlayer instanceof ServerPlayer serverPlayer) {
+        if (pPlayer.level() instanceof ServerLevel serverLevel) {
             Vec3 targetPos = target.position();
-            Vec3 playerPos = serverPlayer.position();
+            Vec3 playerPos = pPlayer.position();
             Entity entity = serverLevel.getEntity(villagerUUID);
             if (entity != null) {
                 entity.moveTo(playerPos);
-                serverPlayer.teleportTo(targetPos.x,targetPos.y,targetPos.z);
+                pPlayer.teleportTo(targetPos.x,targetPos.y,targetPos.z);
                 if(entity instanceof LivingEntity livingEntity){
                     livingEntity.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 200, 0,false,false));
                 }
@@ -185,18 +199,17 @@ public class ModUtils {
         }
     }
 
-    public static void goodSwapVillagerAndPlayer(LivingEntity target, Player pPlayer) {
+    public static void goodSwapVillagerAndPlayer(LivingEntity target, ServerPlayer pPlayer) {
         UUID villagerUUID = target.getUUID();
-        if (pPlayer.level() instanceof ServerLevel serverLevel && pPlayer instanceof ServerPlayer serverPlayer) {
-            swapVillagerAndPlayer(target, serverPlayer);
+        if (pPlayer.level() instanceof ServerLevel serverLevel) {
+            swapVillagerAndPlayer(target, pPlayer);
             Scoreboard scoreboard = serverLevel.getScoreboard();
-            scoreboard.removePlayerFromTeam(serverPlayer.getName().getString());
+            scoreboard.removePlayerFromTeam(pPlayer.getName().getString());
             Vec3 targetPos = target.position();
-            Vec3 playerPos = serverPlayer.position();
             Entity entity = serverLevel.getEntity(villagerUUID);
-            serverPlayer.teleportTo(targetPos.x,targetPos.y,targetPos.z);
+            pPlayer.teleportTo(targetPos.x,targetPos.y,targetPos.z);
             pPlayer.removeAllEffects();
-            serverPlayer.setGameMode(GameType.SURVIVAL);
+            pPlayer.setGameMode(GameType.SURVIVAL);
             FamilyTree tree = FamilyTree.get(serverLevel);
             tree.remove(entity.getUUID());
             entity.discard();
@@ -220,6 +233,7 @@ public class ModUtils {
         soulNBTData.remove("tree_mother_UUID");
         soulNBTData.remove("tree_father_UUID");
         soulNBTData.remove("tree_spouse_UUID");
+        soulNBTData.putString("villagerName","Soul");
         if (PlayerSaveData.get(serverPlayer).getEntityData().getInt("playerModel") >= 1) {
             soulNBTData.putString("custom_skin", serverPlayer.getName().getString());
         }
