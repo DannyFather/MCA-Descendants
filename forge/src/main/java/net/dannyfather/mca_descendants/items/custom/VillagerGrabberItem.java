@@ -1,14 +1,16 @@
 package net.dannyfather.mca_descendants.items.custom;
 
 import net.dannyfather.mca_descendants.util.ModUtils;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.common.Mod;
 import org.jetbrains.annotations.NotNull;
-
 
 public class VillagerGrabberItem extends Item {
 
@@ -18,8 +20,8 @@ public class VillagerGrabberItem extends Item {
 
     @Override
     public @NotNull InteractionResult interactLivingEntity(ItemStack pStack, Player pPlayer, LivingEntity target, InteractionHand hand) {
-        if (pStack.getItem() instanceof VillagerGrabberItem) {
-            ModUtils.swapVillagerAndPlayer(target,pPlayer);
+        if (pStack.getItem() instanceof VillagerGrabberItem && pPlayer instanceof ServerPlayer serverPlayer) {
+            ModUtils.swapVillagerAndPlayer(target,serverPlayer);
         }
         return InteractionResult.SUCCESS;
     }
