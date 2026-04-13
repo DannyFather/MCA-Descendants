@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 
 import net.dannyfather.mca_descendants.block.ModBlocks;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
+import net.dannyfather.mca_descendants.config.MCADescendantsServerConfig;
 import net.dannyfather.mca_descendants.effects.ModEffects;
 import net.dannyfather.mca_descendants.items.ModCreativeModeTabs;
 import net.dannyfather.mca_descendants.items.ModItems;
@@ -56,6 +57,7 @@ public class MCADescendants
         modEventBus.addListener(this::commonSetup);
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, MCADescendantsCommonConfig.SPEC,"mca-descendants.toml");
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, MCADescendantsServerConfig.SERVER_SPEC,"mca-descendants-server.toml");
 
         MinecraftForge.EVENT_BUS.register(this);
 
