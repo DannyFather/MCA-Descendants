@@ -6,6 +6,7 @@ import forge.net.mca.server.world.data.FamilyTreeNode;
 import forge.net.mca.server.world.data.PlayerSaveData;
 import net.dannyfather.mca_descendants.MCADescendants;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
+import net.dannyfather.mca_descendants.config.MCADescendantsServerConfig;
 import net.dannyfather.mca_descendants.util.ModUtils;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -33,17 +34,15 @@ import java.util.UUID;
 import static net.dannyfather.mca_descendants.events.MCADescendantsEvents.*;
 import static net.dannyfather.mca_descendants.network.c2s.getDescendantsRequest.getGrandchildren;
 
-
-@Mod.EventBusSubscriber(modid = MCADescendants.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@Mod.EventBusSubscriber(modid = "sync", bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class SyncCompatibility {
-
 
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
 
         if (ModList.get().isLoaded("sync")) {
             if (event.getEntity() instanceof ServerPlayer player && event.getEntity().level() instanceof ServerLevel serverLevel) {
-                if (serverLevel.getLevelData().isHardcore() || !MCADescendantsCommonConfig.HARDCORE_ONLY.get()) {
+                if (serverLevel.getLevelData().isHardcore() || !MCADescendantsCommonConfig.HARDCORE_ONLY.get() || !MCADescendantsServerConfig.SERVER.SERVER_HARDCORE_ONLY.get()) {
                     int shellCount = 0;
 
                     if (player instanceof Shell shell) {
