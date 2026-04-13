@@ -5,10 +5,11 @@ import forge.net.mca.server.world.data.FamilyTreeNode;
 import forge.net.mca.server.world.data.PlayerSaveData;
 import net.dannyfather.mca_descendants.MCADescendants;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
+import net.dannyfather.mca_descendants.config.MCADescendantsServerConfig;
 import net.dannyfather.mca_descendants.effects.ModEffects;
 import net.dannyfather.mca_descendants.util.ModUtils;
 import net.dannyfather.mca_descendants.world.StructureSpawnData;
-import net.minecraft.client.Minecraft;
+import net.dannyfather.mca_descendants.worldgen.teleporters.SimpleTeleporter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
@@ -18,6 +19,7 @@ import net.minecraft.network.chat.OutgoingChatMessage;
 import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -46,6 +48,7 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.Team;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
@@ -73,7 +76,7 @@ public class MCADescendantsEvents {
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
         if(event.getEntity() instanceof ServerPlayer player && player.level() instanceof ServerLevel serverLevel) {
-            if(serverLevel.getLevelData().isHardcore() || !MCADescendantsCommonConfig.HARDCORE_ONLY.get()) {
+            if(serverLevel.getLevelData().isHardcore() || !MCADescendantsCommonConfig.HARDCORE_ONLY.get() || !MCADescendantsServerConfig.SERVER.SERVER_HARDCORE_ONLY.get()) {
                 if (!ModList.get().isLoaded("sync")) {
                     FamilyTree tree = FamilyTree.get(serverLevel);
                     FamilyTreeNode playerNode = tree.getOrEmpty(player.getUUID()).get();
@@ -181,16 +184,11 @@ public class MCADescendantsEvents {
                     scoreboard.addPlayerToTeam(serverPlayer.getName().getString(), ghostTeam);
 
                     ResourceKey<Level> targetDimension = ResourceKey.create(Registries.DIMENSION, new ResourceLocation(MCADescendants.MODID, "afterlife"));
-                    ServerLevel tpDim = serverPlayer.getServer().getLevel(targetDimension);
+                    ServerLevel tpDim = serverPlayer.server.getLevel(targetDimension);
                     BlockPos spawnPos = new BlockPos(16, 301, 6);
-                    serverPlayer.teleportTo(
-                            tpDim,
-                            spawnPos.getX(),
-                            spawnPos.getY(),
-                            spawnPos.getZ(),
-                            0.0F,
-                            0.0F
-                    );
+                    assert tpDim != null;
+                    tpDim.setChunkForced(spawnPos.getX() >> 4, spawnPos.getZ() >> 4, true);
+                    serverPlayer.changeDimension(tpDim, new SimpleTeleporter(spawnPos.getX(),spawnPos.getY(),spawnPos.getZ()));
                     ResourceLocation structureId = new ResourceLocation(MCADescendants.MODID, "waiting_room");
                     StructureTemplate template = serverLevel.getStructureManager().get(structureId).orElse(null);
                     StructureSpawnData structureSpawnData = StructureSpawnData.get(serverLevel);
