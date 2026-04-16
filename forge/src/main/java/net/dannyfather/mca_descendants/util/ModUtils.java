@@ -303,13 +303,9 @@ public class ModUtils {
                     "  " + jumpAmount + " jumps\\n" +
                     "§l§n§8Damage Taken:§r§o§4\\n" +
                     "  " + damageTaken + " hearts\\n" +
-                    "§l§n§8Damage Dealt:§r§o§4\\n" +
-                    "  " + damageDealt +" hearts\\n" +
-                    "\\n" +
-                    "§l§n§8Social Interactions:§r§o§4\\n" +
-                    "  " + villagersTalkedTo + " conversations" + "\"}\\n"+
-                    "§l§n§8Amount of Trades:§r§o§4\\n" +
-                    "  " + tradeAmount + " trades" + "\"}"));
+                    "§l§n§8Damage Dealt:§r§o§4\\n" + "  " + damageDealt +" hearts\\n" +
+                    "§l§n§8Social Interactions:§r§o§4\\n" + "  " + villagersTalkedTo + " conversations\\n" +
+                    "§l§n§8Amount of Trades:§r§o§4\\n" + "  " + tradeAmount + " trades" + "\"}"));
             pages.add(StringTag.valueOf("{\"text\":\""+ "§lCause of Death:\\n\\n§r§4"+ deathMsg +"\"}"));
             bookTag.put("pages", pages);
 
