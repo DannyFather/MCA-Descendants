@@ -93,18 +93,19 @@ public class MCADescendantsEvents {
                     soul.moveTo(player.blockPosition(),player.getYRot(),player.getXRot());
                     serverLevel.addFreshEntity(soul);
                     ModUtils.evilSwapVillagerAndPlayer(((LivingEntity) soul),player);
-                }
-                if (ModList.get().isLoaded("corpse")) {
-                    serverLevel.getAllEntities().forEach(entity -> {
-                        CompoundTag entityNBT = entity.serializeNBT();
-                        if (entityNBT.getString("id").equals("corpse:corpse")) {
-                            if (entityNBT.getCompound("Death").getString("PlayerName").equals(player.getName().getString())) {
-                                entityNBT.getCompound("Death").putString("PlayerName", LAST_VILLAGER_NAME.get(player.getUUID()));
-                                entity.deserializeNBT(entityNBT);
+                    if (ModList.get().isLoaded("corpse")) {
+                        serverLevel.getAllEntities().forEach(entity -> {
+                            CompoundTag entityNBT = entity.serializeNBT();
+                            if (entityNBT.getString("id").equals("corpse:corpse")) {
+                                if (entityNBT.getCompound("Death").getString("PlayerName").equals(player.getName().getString())) {
+                                    entityNBT.getCompound("Death").putString("PlayerName", LAST_VILLAGER_NAME.get(player.getUUID()));
+                                    entity.deserializeNBT(entityNBT);
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
                 }
+
             }
 
         }
@@ -252,12 +253,22 @@ public class MCADescendantsEvents {
                     }
                 }
             }
-            if(entity instanceof ServerPlayer serverPlayer && ghostTeam instanceof PlayerTeam playerTeam) {
-                if(!PlayerSaveData.get(serverPlayer).getEntityData().getString("villagerName").equals("Soul")) {
-                    scoreboard.removePlayerFromTeam(serverPlayer.getName().getString());
-                } else {
-                    scoreboard.addPlayerToTeam(serverPlayer.getName().getString(),playerTeam);
+            if(entity instanceof ServerPlayer serverPlayer) {
+                if(ghostTeam instanceof PlayerTeam playerTeam) {
+                    if (!PlayerSaveData.get(serverPlayer).getEntityData().getString("villagerName").equals("Soul")) {
+                        scoreboard.removePlayerFromTeam(serverPlayer.getName().getString());
+                    } else {
+                        scoreboard.addPlayerToTeam(serverPlayer.getName().getString(), playerTeam);
+                    }
+
                 }
+
+                FamilyTree tree = FamilyTree.get(serverLevel);
+                FamilyTreeNode playerNode = tree.getOrCreate(serverPlayer);
+                if(!PlayerSaveData.get(serverPlayer).getEntityData().getString("villagerName").equals(playerNode.getName())) {
+                    playerNode.setName(PlayerSaveData.get(serverPlayer).getEntityData().getString("villagerName"));
+                }
+
             }
             else if(!(entity instanceof Player) && entity.serializeNBT().getString("villagerName").equals("Soul")) {
                 entity.discard();

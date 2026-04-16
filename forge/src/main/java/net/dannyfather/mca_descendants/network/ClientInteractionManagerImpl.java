@@ -6,6 +6,9 @@ import net.dannyfather.mca_descendants.network.s2c.getDescendantResponse;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.network.NetworkEvent;
+
+import java.util.function.Supplier;
 
 @Mod.EventBusSubscriber(value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ClientInteractionManagerImpl implements ClientInteractionManager {
@@ -32,4 +35,6 @@ public class ClientInteractionManagerImpl implements ClientInteractionManager {
             }
         });
     }
+
+
 }

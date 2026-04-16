@@ -273,9 +273,10 @@ public class ModUtils {
             int distanceTravelledCM = pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.WALK_ONE_CM)) + pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.WALK_ON_WATER_ONE_CM)) + pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.WALK_UNDER_WATER_ONE_CM)) + pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.SPRINT_ONE_CM))+ pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.CROUCH_ONE_CM));
             int distanceTravelled = distanceTravelledCM / 100;
             int jumpAmount = pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.JUMP));
-            int damageTaken = pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.DAMAGE_TAKEN))/2;
-            int damageDealt = pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.DAMAGE_DEALT))/2;
+            int damageTaken = pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.DAMAGE_TAKEN))/10;
+            int damageDealt = pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.DAMAGE_DEALT))/10;
             int tradeAmount = pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.TRADED_WITH_VILLAGER));
+            int villagersTalkedTo = pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.TALKED_TO_VILLAGER));
             String playerDeathMsg = LAST_DEATH_MESSAGE.get(pPlayer.getUUID());
             String deathMsg = playerDeathMsg.replace(pPlayer.getName().getString(),playerName);
             Iterator<Stat<EntityType<?>>> mobskilledstat = Stats.ENTITY_KILLED.iterator();
@@ -298,22 +299,19 @@ public class ModUtils {
                     "   (Villagers: §c"+villagersKilled+"§7)" + "\"}"));
             pages.add(StringTag.valueOf("{\"text\":\""+ "§l§n§8Distance Travelled:§r§o§4\\n" +
                     "  " + distanceTravelled + " meters\\n" +
-                    "\\n" +
                     "§l§n§8Amount of Jumps:§r§o§4\\n" +
                     "  " + jumpAmount + " jumps\\n" +
-                    "\\n" +
                     "§l§n§8Damage Taken:§r§o§4\\n" +
                     "  " + damageTaken + " hearts\\n" +
-                    "\\n" +
                     "§l§n§8Damage Dealt:§r§o§4\\n" +
                     "  " + damageDealt +" hearts\\n" +
                     "\\n" +
+                    "§l§n§8Social Interactions:§r§o§4\\n" +
+                    "  " + villagersTalkedTo + " conversations" + "\"}\\n"+
                     "§l§n§8Amount of Trades:§r§o§4\\n" +
                     "  " + tradeAmount + " trades" + "\"}"));
             pages.add(StringTag.valueOf("{\"text\":\""+ "§lCause of Death:\\n\\n§r§4"+ deathMsg +"\"}"));
             bookTag.put("pages", pages);
-
-            removeStats(pPlayer);
 
             // Place book on lectern
             lectern.setBook(book);
@@ -340,7 +338,9 @@ public class ModUtils {
         pPlayer.getStats().setValue(pPlayer,Stats.CUSTOM.get(Stats.DAMAGE_TAKEN),0);
         pPlayer.getStats().setValue(pPlayer,Stats.CUSTOM.get(Stats.DAMAGE_DEALT),0);
         pPlayer.getStats().setValue(pPlayer,Stats.CUSTOM.get(Stats.TRADED_WITH_VILLAGER),0);
+        pPlayer.getStats().setValue(pPlayer,Stats.CUSTOM.get(Stats.TALKED_TO_VILLAGER),0);
         pPlayer.getStats().setValue(pPlayer,Stats.CUSTOM.get(Stats.PLAY_TIME),0);
+
     }
 
     private static void detachFromParents(FamilyTreeNode node, FamilyTree tree) {

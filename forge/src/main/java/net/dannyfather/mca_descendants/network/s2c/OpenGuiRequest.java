@@ -1,10 +1,6 @@
 package net.dannyfather.mca_descendants.network.s2c;
 
-import net.dannyfather.mca_descendants.ClientProxy;
-import net.dannyfather.mca_descendants.client.gui.PhoneScreen;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.entity.Entity;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
@@ -29,12 +25,21 @@ public class OpenGuiRequest {
         buf.writeInt(villager);
     }
 
-    public void handle(Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> {
-            Minecraft.getInstance().setScreen(new PhoneScreen(villager));
+    public void handle(Supplier<NetworkEvent.Context> ctxSupplier) {
+        NetworkEvent.Context ctx = ctxSupplier.get();
+
+        ctx.enqueueWork(() -> {
+            net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(
+                    net.minecraftforge.api.distmarker.Dist.CLIENT,
+                    () -> () -> {
+                        net.dannyfather.mca_descendants.client.ClientHandler.openGui(this);
+                    }
+            );
         });
-        ctx.get().setPacketHandled(true);
+
+        ctx.setPacketHandled(true);
     }
+
 
     public Type getGui() {
         return Type.values()[gui];

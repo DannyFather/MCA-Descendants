@@ -110,9 +110,7 @@ public class MCADescendantsServerEvents {
                         serverPlayer.setGameMode(GameType.ADVENTURE);
                     }
                 }
-                if(!PlayerSaveData.get(serverPlayer).getEntityData().getString("villagerName").equals(playerNode.getName())) {
-                    playerNode.setName(PlayerSaveData.get(serverPlayer).getEntityData().getString("villagerName"));
-                }
+
             }
 
     }

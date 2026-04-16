@@ -88,6 +88,8 @@ public class CallToPlayerMessage {
                 });
 
             }
+
+            ModUtils.removeStats(player);
         });
 
         ctx.get().setPacketHandled(true);

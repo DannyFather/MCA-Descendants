@@ -3,6 +3,7 @@ package net.dannyfather.mca_descendants.client.gui;
 import forge.net.mca.entity.EntitiesMCA;
 import forge.net.mca.entity.VillagerEntityMCA;
 import forge.net.mca.util.compat.ButtonWidget;
+import net.dannyfather.mca_descendants.MCADescendants;
 import net.dannyfather.mca_descendants.network.ModNetwork;
 import net.dannyfather.mca_descendants.network.c2s.CallToPlayerMessage;
 import net.dannyfather.mca_descendants.network.c2s.getDescendantsRequest;
@@ -29,7 +30,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 
-
+@Mod.EventBusSubscriber(modid = MCADescendants.MODID,value = Dist.CLIENT)
 public class PhoneScreen extends Screen {
     private List<String> keys = new ArrayList<>();
     private CompoundTag villagerData = new CompoundTag();
