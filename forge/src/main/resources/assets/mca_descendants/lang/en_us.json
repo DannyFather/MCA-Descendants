@@ -10,5 +10,9 @@
   "dimension.mca_descendants.afterlife": "The Afterlife",
   "item.mca_descendants.villager_grabber": "Swap Villager and Player",
   "item.mca_descendants.good_villager_grabber": "Swap Villager and Player (Deletes Player)",
-  "item.mca_descendants.evil_villager_grabber": "Swap Villager and Player (Kills Player)"
+  "item.mca_descendants.evil_villager_grabber": "Swap Villager and Player (Kills Player)",
+  "subtitles.mca_descendants.phone_pickup": "Phone Picked Up",
+  "subtitles.mca_descendants.phone_hangup": "Phone Hung Up",
+  "subtitles.mca_descendants.phone_dial_tone": "Dial Tone",
+  "subtitles.mca_descendants.phone_ringing": "Phone Ringing"
 }

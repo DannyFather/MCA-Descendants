@@ -4,6 +4,9 @@ import forge.net.mca.server.world.data.FamilyTree;
 import forge.net.mca.server.world.data.FamilyTreeNode;
 import forge.net.mca.server.world.data.PlayerSaveData;
 import net.dannyfather.mca_descendants.MCADescendants;
+import net.dannyfather.mca_descendants.block.ModBlocks;
+import net.dannyfather.mca_descendants.block.custom.PhoneBlock;
+import net.dannyfather.mca_descendants.client.gui.PhoneScreen;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.config.MCADescendantsServerConfig;
 import net.dannyfather.mca_descendants.effects.ModEffects;
@@ -34,15 +37,15 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.WritableBookItem;
 import net.minecraft.world.item.WrittenBookItem;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.LecternBlock;
-import net.minecraft.world.level.block.Mirror;
-import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.LecternBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.RedstoneSide;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.scores.PlayerTeam;
@@ -63,7 +66,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static net.dannyfather.mca_descendants.network.c2s.getDescendantsRequest.getGrandchildren;
+import static net.dannyfather.mca_descendants.block.custom.PhoneBlock.POWERED;
+import static net.dannyfather.mca_descendants.network.c2s.getDescendantsRequest.*;
 import static net.minecraft.ChatFormatting.DARK_AQUA;
 
 @Mod.EventBusSubscriber(modid = MCADescendants.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
@@ -215,7 +219,18 @@ public class MCADescendantsEvents {
                         }
                     }
                     BlockPos lecternPos = new BlockPos(10, 303, 21);
+                    BlockPos phonePos = new BlockPos(7, 304, 20);
+                    BlockPos wallPos = new BlockPos(7, 304, 21);
+                    BlockPos leverPos = new BlockPos(7, 304, 22);
+                    BlockState phoneState = tpDim.getBlockState(phonePos);
+                    BlockState wallState = tpDim.getBlockState(phonePos);
+                    BlockState leverState = tpDim.getBlockState(phonePos);
                     ModUtils.placeBookOnLectern(tpDim, lecternPos, soulName, CHILDREN_COUNT.get(serverPlayer.getUUID()), GRANDCHILDREN_COUNT.get(serverPlayer.getUUID()), serverPlayer);
+                    tpDim.setBlock(wallPos, Blocks.GRAY_TERRACOTTA.defaultBlockState(),3);
+                    tpDim.setBlock(leverPos, Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.NORTH, RedstoneSide.SIDE),3);
+                    tpDim.updateNeighborsAt(leverPos, leverState.getBlock());
+                    tpDim.updateNeighborsAt(wallPos, wallState.getBlock());
+                    tpDim.updateNeighborsAt(phonePos, phoneState.getBlock());
                     serverPlayer.setGameMode(GameType.ADVENTURE);
                 }
             }

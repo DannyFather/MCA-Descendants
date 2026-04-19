@@ -7,8 +7,10 @@ import net.dannyfather.mca_descendants.MCADescendants;
 import net.dannyfather.mca_descendants.network.ModNetwork;
 import net.dannyfather.mca_descendants.network.c2s.CallToPlayerMessage;
 import net.dannyfather.mca_descendants.network.c2s.getDescendantsRequest;
+import net.dannyfather.mca_descendants.sound.ModSounds;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.animal.Pig;
@@ -32,8 +34,9 @@ import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 
 @Mod.EventBusSubscriber(modid = MCADescendants.MODID,value = Dist.CLIENT)
 public class PhoneScreen extends Screen {
-    private List<String> keys = new ArrayList<>();
+    public static List<String> keys = new ArrayList<>();
     private CompoundTag villagerData = new CompoundTag();
+    private boolean dialSoundFired = false;
 
     private VillagerEntityMCA dummy;
     Quaternionf modelRot = new Quaternionf().rotationXYZ(
@@ -71,6 +74,7 @@ public class PhoneScreen extends Screen {
     @Override
     public void init() {
         CHANNEL.sendToServer(new getDescendantsRequest());
+        dialSoundFired = true;
 
         selectionLeftButton = addRenderableWidget(new ButtonWidget(width / 2 - 123, height / 2 + 65, 20, 20, Component.literal("<<"), b -> {
             if (selectedIndex == 0) {
@@ -98,6 +102,7 @@ public class PhoneScreen extends Screen {
 
         addRenderableWidget(new ButtonWidget(width / 2 + 40, height / 2 + 90, 60, 20, Component.translatable("gui.button.exit"), b -> Objects.requireNonNull(this.minecraft).setScreen(null)));
 
+
         toggleButtons(false);
     }
 
@@ -113,6 +118,17 @@ public class PhoneScreen extends Screen {
         } else {
             if (keys.size() == 0) {
                 guiGraphics.drawCenteredString(this.font, Component.translatable("gui.phone.noDescendants"), width / 2, height / 2 + 50, 0xffffff);
+                if (dialSoundFired) {
+                    if (this.minecraft != null && this.minecraft.player != null) {
+                        this.minecraft.player.playSound(
+                                ModSounds.PHONE_DIAL_TONE.get(),
+                                1.0F,
+                                1.0F
+                        );
+                    }
+                    dialSoundFired = false;
+                }
+
             } else {
                 guiGraphics.drawCenteredString(this.font, (selectedIndex + 1) + " / " + keys.size(), width / 2, height / 2 + 50, 0xffffff);
             }
@@ -155,7 +171,6 @@ public class PhoneScreen extends Screen {
             if (dummy == null) return;
             dummy.load(firstData);
 
-            // 🔥 REQUIRED FIXES
             dummy.setPos(0, 0, 0);
             dummy.setYRot(0F);
             dummy.setXRot(0.0F);
@@ -175,5 +190,18 @@ public class PhoneScreen extends Screen {
         selectionLeftButton.active = enabled;
         selectionRightButton.active = enabled;
         callButton.active = enabled;
+    }
+
+    @Override
+    public void removed() {
+        super.removed();
+        Minecraft.getInstance().getSoundManager().stop(ModSounds.PHONE_DIAL_TONE.get().getLocation(), SoundSource.BLOCKS);
+        if (this.minecraft != null && this.minecraft.player != null) {
+            this.minecraft.player.playSound(
+                    ModSounds.PHONE_HANGUP.get(),
+                    1.0F,
+                    1.0F
+            );
+        }
     }
 }

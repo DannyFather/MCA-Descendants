@@ -45,14 +45,13 @@ public class getDescendantsRequest {
         return grandchildrenSet;
     }
 
-    public static Stream<UUID> descendantStream(FamilyTreeNode node, ServerLevel serverLevel) {
-        Stream<UUID> dStream;
+    public static Set<UUID> getValidRespawnCandidates(FamilyTreeNode node, ServerLevel serverLevel){
+        Set<UUID> dSet = new HashSet<>();
+        dSet.addAll(getGrandchildren(node,serverLevel));
         if(MCADescendantsCommonConfig.PLAY_AS_SIBLINGS.get()) {
-            dStream = Stream.concat(node.siblings().stream(),getGrandchildren(node, serverLevel).stream());
-        } else {
-            dStream = getGrandchildren(node,serverLevel).stream();
+            dSet.addAll(node.siblings());
         }
-        return dStream;
+        return dSet;
     }
 
     public getDescendantsRequest() {}
@@ -76,7 +75,7 @@ public class getDescendantsRequest {
 
                 Stream.concat(
                                 playerNode.streamChildren(),
-                                descendantStream(playerNode,level)
+                                getValidRespawnCandidates(playerNode,level).stream()
                         ).distinct()
                         .map(level::getEntity)
                         .filter(e -> e instanceof VillagerLike<?>)

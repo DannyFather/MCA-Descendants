@@ -11,6 +11,7 @@ import net.dannyfather.mca_descendants.items.ModItems;
 import net.dannyfather.mca_descendants.network.ClientInteractionManager;
 import net.dannyfather.mca_descendants.network.ClientInteractionManagerImpl;
 import net.dannyfather.mca_descendants.network.ModNetwork;
+import net.dannyfather.mca_descendants.sound.ModSounds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.client.color.item.ItemColors;
@@ -55,6 +56,7 @@ public class MCADescendants
         ModBlocks.register(modEventBus);
         ModEffects.register(modEventBus);
         ModCreativeModeTabs.register(modEventBus);
+        ModSounds.register(modEventBus);
         modEventBus.addListener(this::commonSetup);
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, MCADescendantsCommonConfig.SPEC,"mca-descendants.toml");
