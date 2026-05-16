@@ -28,13 +28,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.LecternBlock;
-import net.minecraft.world.level.block.Mirror;
-import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.LecternBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.RedstoneSide;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.scores.PlayerTeam;
@@ -106,7 +104,18 @@ public class MCADescendantsServerEvents {
                             }
                         }
                         BlockPos lecternPos = new BlockPos(10, 303, 21);
+                        BlockPos phonePos = new BlockPos(7, 304, 20);
+                        BlockPos wallPos = new BlockPos(7, 304, 21);
+                        BlockPos leverPos = new BlockPos(7, 304, 22);
+                        BlockState phoneState = tpDim.getBlockState(phonePos);
+                        BlockState wallState = tpDim.getBlockState(phonePos);
+                        BlockState leverState = tpDim.getBlockState(phonePos);
                         ModUtils.placeBookOnLectern(tpDim, lecternPos, soulName, CHILDREN_COUNT.get(serverPlayer.getUUID()), GRANDCHILDREN_COUNT.get(serverPlayer.getUUID()), serverPlayer);
+                        tpDim.setBlock(wallPos, Blocks.GRAY_TERRACOTTA.defaultBlockState(),3);
+                        tpDim.setBlock(leverPos, Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.NORTH, RedstoneSide.SIDE),3);
+                        tpDim.updateNeighborsAt(leverPos, leverState.getBlock());
+                        tpDim.updateNeighborsAt(wallPos, wallState.getBlock());
+                        tpDim.updateNeighborsAt(phonePos, phoneState.getBlock());
                         serverPlayer.setGameMode(GameType.ADVENTURE);
                     }
                 }
