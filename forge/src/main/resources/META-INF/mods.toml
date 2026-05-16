@@ -7,9 +7,9 @@ license = "Insert License Here"
 modId = "mca_descendants"
 version = "${version}"
 displayName = "MCA Descendants"
-authors = "Me!"
+authors = "DannyFather"
 description = '''
-This is an example description! Tell everyone what your mod is about!
+Adds the ability to respawn as family members for MCA:Reborn
 '''
 #logoFile = ""
 

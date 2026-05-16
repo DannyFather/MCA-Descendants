@@ -1,5 +1,6 @@
 package net.dannyfather.mca_descendants.events;
 
+import forge.net.mca.entity.VillagerLike;
 import forge.net.mca.server.world.data.FamilyTree;
 import forge.net.mca.server.world.data.FamilyTreeNode;
 import forge.net.mca.server.world.data.PlayerSaveData;
@@ -10,6 +11,7 @@ import net.dannyfather.mca_descendants.client.gui.PhoneScreen;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.config.MCADescendantsServerConfig;
 import net.dannyfather.mca_descendants.effects.ModEffects;
+import net.dannyfather.mca_descendants.server.world.data.DescendantLocationData;
 import net.dannyfather.mca_descendants.util.ModUtils;
 import net.dannyfather.mca_descendants.world.StructureSpawnData;
 import net.dannyfather.mca_descendants.worldgen.teleporters.SimpleTeleporter;
@@ -38,6 +40,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.WritableBookItem;
 import net.minecraft.world.item.WrittenBookItem;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
@@ -53,18 +56,28 @@ import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.Team;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.world.ForgeChunkManager;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
+import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.level.ChunkDataEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
+import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.server.ServerLifecycleHooks;
 import org.apache.logging.log4j.core.jmx.Server;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static net.dannyfather.mca_descendants.block.custom.PhoneBlock.POWERED;
 import static net.dannyfather.mca_descendants.network.c2s.getDescendantsRequest.*;
@@ -76,44 +89,78 @@ public class MCADescendantsEvents {
     public static final Map<UUID, String> LAST_VILLAGER_NAME = new HashMap<>();
     public static final Map<UUID, Integer> CHILDREN_COUNT = new HashMap<>();
     public static final Map<UUID, Integer> GRANDCHILDREN_COUNT = new HashMap<>();
+    public static final Map<UUID, Set<UUID>> DESCENDANTS = new HashMap<>();
 
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
-        if(event.getEntity() instanceof ServerPlayer player && player.level() instanceof ServerLevel serverLevel) {
-            if(serverLevel.getLevelData().isHardcore() || !MCADescendantsCommonConfig.HARDCORE_ONLY.get() || !MCADescendantsServerConfig.SERVER.SERVER_HARDCORE_ONLY.get()) {
-                if (!ModList.get().isLoaded("sync")) {
-                    FamilyTree tree = FamilyTree.get(serverLevel);
-                    FamilyTreeNode playerNode = tree.getOrEmpty(player.getUUID()).get();
-                    int childrenCount = playerNode.children().size();
-                    CHILDREN_COUNT.put(player.getUUID(),childrenCount);
-                    int grandchildrenCount = getGrandchildren(playerNode,serverLevel).size();
-                    GRANDCHILDREN_COUNT.put(player.getUUID(),grandchildrenCount);
-                    String deathMsg = event.getSource().getLocalizedDeathMessage(player).getString();
-                    LAST_DEATH_MESSAGE.put(player.getUUID(),deathMsg);
-                    String villagerName = PlayerSaveData.get(player).getEntityData().getString("villagerName");
-                    LAST_VILLAGER_NAME.put(player.getUUID(),villagerName);
-                    player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY,-1,0,false,false));
-                    Entity soul = ModUtils.summonSoul(player,serverLevel);
-                    soul.moveTo(player.blockPosition(),player.getYRot(),player.getXRot());
-                    serverLevel.addFreshEntity(soul);
-                    ModUtils.evilSwapVillagerAndPlayer(((LivingEntity) soul),player);
-                    if (ModList.get().isLoaded("corpse")) {
-                        serverLevel.getAllEntities().forEach(entity -> {
-                            CompoundTag entityNBT = entity.serializeNBT();
-                            if (entityNBT.getString("id").equals("corpse:corpse")) {
-                                if (entityNBT.getCompound("Death").getString("PlayerName").equals(player.getName().getString())) {
-                                    entityNBT.getCompound("Death").putString("PlayerName", LAST_VILLAGER_NAME.get(player.getUUID()));
-                                    entity.deserializeNBT(entityNBT);
+        if(event.getEntity().level() instanceof ServerLevel serverLevel) {
+            if(event.getEntity() instanceof ServerPlayer player) {
+                if (serverLevel.getLevelData().isHardcore() || !MCADescendantsCommonConfig.HARDCORE_ONLY.get() || !MCADescendantsServerConfig.SERVER.SERVER_HARDCORE_ONLY.get()) {
+                    if (!ModList.get().isLoaded("sync")) {
+                        FamilyTree tree = FamilyTree.get(serverLevel);
+                        FamilyTreeNode playerNode = tree.getOrEmpty(player.getUUID()).get();
+                        int childrenCount = playerNode.children().size();
+                        CHILDREN_COUNT.put(player.getUUID(), childrenCount);
+                        int grandchildrenCount = getGrandchildren(playerNode, serverLevel).size();
+                        GRANDCHILDREN_COUNT.put(player.getUUID(), grandchildrenCount);
+                        String deathMsg = event.getSource().getLocalizedDeathMessage(player).getString();
+                        LAST_DEATH_MESSAGE.put(player.getUUID(), deathMsg);
+                        String villagerName = PlayerSaveData.get(player).getEntityData().getString("villagerName");
+                        LAST_VILLAGER_NAME.put(player.getUUID(), villagerName);
+                        player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, -1, 0, false, false));
+                        Entity soul = ModUtils.summonSoul(player, serverLevel);
+                        soul.moveTo(player.blockPosition(), player.getYRot(), player.getXRot());
+                        serverLevel.addFreshEntity(soul);
+                        ModUtils.evilSwapVillagerAndPlayer(((LivingEntity) soul), player);
+                        if (ModList.get().isLoaded("corpse")) {
+                            serverLevel.getAllEntities().forEach(entity -> {
+                                CompoundTag entityNBT = entity.serializeNBT();
+                                if (entityNBT.getString("id").equals("corpse:corpse")) {
+                                    if (entityNBT.getCompound("Death").getString("PlayerName").equals(player.getName().getString())) {
+                                        entityNBT.getCompound("Death").putString("PlayerName", LAST_VILLAGER_NAME.get(player.getUUID()));
+                                        entity.deserializeNBT(entityNBT);
+                                    }
                                 }
-                            }
-                        });
+                            });
+                        }
                     }
+
                 }
 
             }
 
+
         }
     }
+
+
+    @SubscribeEvent
+    public static void onLeaveEvent(EntityLeaveLevelEvent event) {
+        Entity entity = event.getEntity();
+        if(event.getLevel() instanceof ServerLevel serverLevel && entity instanceof VillagerLike<?>) {
+            DescendantLocationData data = DescendantLocationData.get(serverLevel);
+            serverLevel.getPlayers(serverPlayer -> {data.remove(entity,serverPlayer.getUUID());
+                return false;
+            });
+        }
+    }
+
+    @SubscribeEvent
+    public static void onChangeDimensionEvent(EntityTravelToDimensionEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            MinecraftServer server = player.getServer();
+            server.getAllLevels().forEach(level -> {
+                DescendantLocationData data = DescendantLocationData.get(level);
+                data.get(player.getUUID()).values().forEach(pos -> {
+                    ChunkPos chunkPos = new ChunkPos(pos);
+                    ForgeChunkManager.forceChunk(level, MCADescendants.MODID, player.getUUID(), chunkPos.x, chunkPos.z, false, true);
+                });
+            });
+        }
+
+    }
+
+
 
     @SubscribeEvent
     public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
@@ -243,9 +290,12 @@ public class MCADescendantsEvents {
     public static void TickEvent(LivingEvent.LivingTickEvent event) {
         Entity entity = event.getEntity();
         ResourceKey afterLife = ResourceKey.create(Registries.DIMENSION, new ResourceLocation(MCADescendants.MODID, "afterlife"));
+
         if(entity.level() instanceof ServerLevel serverLevel) {
             Scoreboard scoreboard = serverLevel.getScoreboard();
             Team ghostTeam = scoreboard.getPlayerTeam("ghosts");
+            DescendantLocationData data = DescendantLocationData.get(serverLevel);
+            FamilyTree tree = FamilyTree.get(serverLevel);
 
             if (ghostTeam == null) {
                 scoreboard.addPlayerTeam("ghosts");
@@ -255,6 +305,8 @@ public class MCADescendantsEvents {
                     playerTeam.setAllowFriendlyFire(false);
                 }
             }
+
+
             if(entity instanceof LivingEntity livingEntity && livingEntity.isAlive()){
                 if(entity.getTeam() == ghostTeam){
                     livingEntity.addEffect(new MobEffectInstance(ModEffects.SPIRIT.get(),-1,0,false,false));
@@ -269,7 +321,8 @@ public class MCADescendantsEvents {
                 }
             }
             if(entity instanceof ServerPlayer serverPlayer) {
-                if(ghostTeam instanceof PlayerTeam playerTeam) {
+                FamilyTreeNode playerNode = tree.getOrCreate(serverPlayer);
+                if (ghostTeam instanceof PlayerTeam playerTeam) {
                     if (!PlayerSaveData.get(serverPlayer).getEntityData().getString("villagerName").equals("Soul")) {
                         scoreboard.removePlayerFromTeam(serverPlayer.getName().getString());
                     } else {
@@ -278,11 +331,24 @@ public class MCADescendantsEvents {
 
                 }
 
-                FamilyTree tree = FamilyTree.get(serverLevel);
-                FamilyTreeNode playerNode = tree.getOrCreate(serverPlayer);
-                if(!PlayerSaveData.get(serverPlayer).getEntityData().getString("villagerName").equals(playerNode.getName())) {
+                if (!PlayerSaveData.get(serverPlayer).getEntityData().getString("villagerName").equals(playerNode.getName())) {
                     playerNode.setName(PlayerSaveData.get(serverPlayer).getEntityData().getString("villagerName"));
                 }
+                    UUID id = serverPlayer.getUUID();
+                    Set<UUID> descendantSet = new HashSet<>();
+                    DESCENDANTS.put(id, descendantSet);
+                    playerNode.children().forEach(descendantSet::add);
+                    getValidRespawnCandidates(playerNode, serverLevel).forEach(descendantSet::add);
+                    for (UUID uuid : descendantSet) {
+                        Entity e = serverLevel.getEntity(uuid);
+                        if (e instanceof VillagerLike<?>){
+                            if(e.isAlive()) {
+                                if(serverPlayer.tickCount % 100 == 0) {
+                                    data.update(e, id);
+                                }
+                            }
+                        }
+                    }
 
             }
             else if(!(entity instanceof Player) && entity.serializeNBT().getString("villagerName").equals("Soul")) {
