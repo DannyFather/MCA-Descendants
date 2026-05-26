@@ -23,6 +23,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stat;
 import net.minecraft.stats.Stats;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -180,7 +181,7 @@ public class ModUtils {
         }
     }
 
-    public static void evilSwapVillagerAndPlayer(LivingEntity target, ServerPlayer pPlayer) {
+    public static void evilSwapVillagerAndPlayer(LivingEntity target, ServerPlayer pPlayer, DamageSource source) {
         UUID villagerUUID = target.getUUID();
         swapVillagerAndPlayer(target, pPlayer);
         if (pPlayer.level() instanceof ServerLevel serverLevel) {
@@ -191,9 +192,8 @@ public class ModUtils {
                 entity.moveTo(playerPos);
                 pPlayer.teleportTo(targetPos.x,targetPos.y,targetPos.z);
                 if(entity instanceof LivingEntity livingEntity){
-                    livingEntity.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 200, 0,false,false));
+                    livingEntity.hurt(source, livingEntity.getMaxHealth() + 500f);
                 }
-                entity.kill();
             }
 
         }
@@ -233,7 +233,7 @@ public class ModUtils {
         soulNBTData.remove("tree_mother_UUID");
         soulNBTData.remove("tree_father_UUID");
         soulNBTData.remove("tree_spouse_UUID");
-        soulNBTData.putString("villagerName","Soul");
+        soulNBTData.putString("villagerName","\uD83D\uDC7B");
         if (PlayerSaveData.get(serverPlayer).getEntityData().getInt("playerModel") >= 1) {
             soulNBTData.putString("custom_skin", serverPlayer.getName().getString());
         }
@@ -243,7 +243,7 @@ public class ModUtils {
         VillagerEntityMCA soulNPC = (VillagerEntityMCA) soulEntity;
         assert soulNPC != null;
         soulNPC.setCustomNameVisible(true);
-        soulNPC.setCustomName(Component.literal("Soul"));
+        soulNPC.setCustomName(Component.literal("\uD83D\uDC7B"));
         soulNPC.getTraits().addTrait(ASEXUAL);
         soulNPC.getTraits().addTrait(COLOR_BLIND);
         soulNPC.getGenetics().setGene(Genetics.SKIN, 0f);
@@ -269,7 +269,7 @@ public class ModUtils {
             int mobsKilled = 0;
             int humansKilled = pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.PLAYER_KILLS)) + pPlayer.getStats().getValue(Stats.ENTITY_KILLED.get(type1)) + pPlayer.getStats().getValue(Stats.ENTITY_KILLED.get(type2));
             int villagersKilled = pPlayer.getStats().getValue(Stats.ENTITY_KILLED.get(EntityType.VILLAGER));
-            int daysLived = pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.PLAY_TIME))/24000;
+            int deathCount = pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
             int distanceTravelledCM = pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.WALK_ONE_CM)) + pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.WALK_ON_WATER_ONE_CM)) + pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.WALK_UNDER_WATER_ONE_CM)) + pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.SPRINT_ONE_CM))+ pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.CROUCH_ONE_CM));
             int distanceTravelled = distanceTravelledCM / 100;
             int jumpAmount = pPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.JUMP));
@@ -288,7 +288,7 @@ public class ModUtils {
             ListTag pages = new ListTag();
             pages.add(StringTag.valueOf("{\"text\":\""+ "\\n\\n\\n\\n" +
                     " §lThe Scores And\\n Achievements of\\n " + playerName +"\"}" ));
-            pages.add(StringTag.valueOf("{\"text\":\"" + "§l§8Days Lasted: §r§4"+daysLived+"\\n" +
+            pages.add(StringTag.valueOf("{\"text\":\"" +"\\n" +
                     "\\n" +
                     "§l§8Children: §r§4" + childrenCount + "\\n" +
                     "\\n" +
@@ -296,7 +296,9 @@ public class ModUtils {
                     "\\n" +
                     "§l§8Mobs Killed: §r§4"+ mobsKilled +"§7\\n" +
                     "   (Humans: §c"+humansKilled+"§7)\\n" +
-                    "   (Villagers: §c"+villagersKilled+"§7)" + "\"}"));
+                    "   (Villagers: §c"+villagersKilled+"§7)" +
+                    "\\n\\n" +
+                    "§l§8Incarnation: §r§4"+deathCount + "\"}"));
             pages.add(StringTag.valueOf("{\"text\":\""+ "§l§n§8Distance Travelled:§r§o§4\\n" +
                     "  " + distanceTravelled + " meters\\n" +
                     "§l§n§8Amount of Jumps:§r§o§4\\n" +

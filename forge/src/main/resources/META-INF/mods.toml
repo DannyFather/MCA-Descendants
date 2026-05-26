@@ -9,7 +9,7 @@ version = "${version}"
 displayName = "MCA Descendants"
 authors = "DannyFather"
 description = '''
-Adds the ability to respawn as family members for MCA:Reborn
+Addon for MCA:Reborn. Adds the ability to respawn as your descendants while playing hardcore mode.
 '''
 #logoFile = ""
 

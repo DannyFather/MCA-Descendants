@@ -9,11 +9,13 @@ import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.util.ModUtils;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.stats.Stats;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.GameType;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
@@ -54,18 +56,24 @@ public class SyncCompatibility {
                         FamilyTree tree = FamilyTree.get(serverLevel);
                         FamilyTreeNode playerNode = tree.getOrEmpty(player.getUUID()).get();
                         int childrenCount = playerNode.children().size();
-                        CHILDREN_COUNT.put(player.getUUID(),childrenCount);
-                        int grandchildrenCount = getGrandchildren(playerNode,serverLevel).size();
-                        GRANDCHILDREN_COUNT.put(player.getUUID(),grandchildrenCount);
+                        CHILDREN_COUNT.put(player.getUUID(), childrenCount);
+                        int grandchildrenCount = getGrandchildren(playerNode, serverLevel).size();
+                        GRANDCHILDREN_COUNT.put(player.getUUID(), grandchildrenCount);
                         String deathMsg = event.getSource().getLocalizedDeathMessage(player).getString();
-                        LAST_DEATH_MESSAGE.put(player.getUUID(),deathMsg);
+                        LAST_DEATH_MESSAGE.put(player.getUUID(), deathMsg);
                         String villagerName = PlayerSaveData.get(player).getEntityData().getString("villagerName");
-                        LAST_VILLAGER_NAME.put(player.getUUID(),villagerName);
-                        player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY,-1,0,false,false));
-                        Entity soul = ModUtils.summonSoul(player,serverLevel);
-                        soul.moveTo(player.blockPosition(),player.getYRot(),player.getXRot());
-                        serverLevel.addFreshEntity(soul);
-                        ModUtils.evilSwapVillagerAndPlayer(((LivingEntity) soul),player);
+                        LAST_VILLAGER_NAME.put(player.getUUID(), villagerName);
+                        player.setGameMode(GameType.SPECTATOR);
+                        if(!PlayerSaveData.get(player).getEntityData().getString("villagerName").equals("\uD83D\uDC7B")) {
+                            Entity soul = ModUtils.summonSoul(player, serverLevel);
+                            soul.moveTo(player.blockPosition(), player.getYRot(), player.getXRot());
+                            serverLevel.addFreshEntity(soul);
+                            ModUtils.evilSwapVillagerAndPlayer(((LivingEntity) soul), player, event.getSource());
+                        } else {
+                            int deathCount = player.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
+                            player.getStats().setValue(player,Stats.CUSTOM.get(Stats.DEATHS),deathCount - 1);
+                        }
+                        player.setRespawnPosition(player.level().dimension(),player.blockPosition(),player.getXRot(),true,false);
 
                     }
 

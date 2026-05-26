@@ -6,6 +6,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -31,7 +32,7 @@ public class EvilVillagerGrabberItem extends Item {
     @Override
     public @NotNull InteractionResult interactLivingEntity(ItemStack pStack, Player pPlayer, LivingEntity target, InteractionHand hand) {
         if(pPlayer instanceof ServerPlayer serverPlayer) {
-            evilSwapVillagerAndPlayer(target, serverPlayer);
+            evilSwapVillagerAndPlayer(target, serverPlayer, serverPlayer.damageSources().genericKill());
         }
         return InteractionResult.SUCCESS;
     }

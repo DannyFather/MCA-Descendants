@@ -197,6 +197,7 @@ public class PhoneScreen extends Screen {
         super.removed();
         Minecraft.getInstance().getSoundManager().stop(ModSounds.PHONE_DIAL_TONE.get().getLocation(), SoundSource.BLOCKS);
         if (this.minecraft != null && this.minecraft.player != null) {
+            this.minecraft.getSoundManager().stop(null,SoundSource.PLAYERS);
             this.minecraft.player.playSound(
                     ModSounds.PHONE_HANGUP.get(),
                     1.0F,

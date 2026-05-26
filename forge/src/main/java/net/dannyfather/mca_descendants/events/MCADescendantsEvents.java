@@ -27,6 +27,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.stats.Stat;
+import net.minecraft.stats.StatType;
+import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -39,16 +42,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.WritableBookItem;
 import net.minecraft.world.item.WrittenBookItem;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.GameType;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.LecternBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.RedstoneSide;
+import net.minecraft.world.level.levelgen.structure.templatesystem.BlockIgnoreProcessor;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.scores.PlayerTeam;
@@ -57,6 +58,7 @@ import net.minecraft.world.scores.Team;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.world.ForgeChunkManager;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
@@ -90,6 +92,7 @@ public class MCADescendantsEvents {
     public static final Map<UUID, Integer> CHILDREN_COUNT = new HashMap<>();
     public static final Map<UUID, Integer> GRANDCHILDREN_COUNT = new HashMap<>();
     public static final Map<UUID, Set<UUID>> DESCENDANTS = new HashMap<>();
+    private static final Map<UUID,Integer> RESPAWN_TICKS = new HashMap<>();
 
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
@@ -107,22 +110,28 @@ public class MCADescendantsEvents {
                         LAST_DEATH_MESSAGE.put(player.getUUID(), deathMsg);
                         String villagerName = PlayerSaveData.get(player).getEntityData().getString("villagerName");
                         LAST_VILLAGER_NAME.put(player.getUUID(), villagerName);
-                        player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, -1, 0, false, false));
-                        Entity soul = ModUtils.summonSoul(player, serverLevel);
-                        soul.moveTo(player.blockPosition(), player.getYRot(), player.getXRot());
-                        serverLevel.addFreshEntity(soul);
-                        ModUtils.evilSwapVillagerAndPlayer(((LivingEntity) soul), player);
-                        if (ModList.get().isLoaded("corpse")) {
-                            serverLevel.getAllEntities().forEach(entity -> {
-                                CompoundTag entityNBT = entity.serializeNBT();
-                                if (entityNBT.getString("id").equals("corpse:corpse")) {
-                                    if (entityNBT.getCompound("Death").getString("PlayerName").equals(player.getName().getString())) {
-                                        entityNBT.getCompound("Death").putString("PlayerName", LAST_VILLAGER_NAME.get(player.getUUID()));
-                                        entity.deserializeNBT(entityNBT);
-                                    }
-                                }
-                            });
+                        player.setGameMode(GameType.SPECTATOR);
+                        if(!PlayerSaveData.get(player).getEntityData().getString("villagerName").equals("\uD83D\uDC7B")) {
+                            Entity soul = ModUtils.summonSoul(player, serverLevel);
+                            soul.moveTo(player.blockPosition(), player.getYRot(), player.getXRot());
+                            serverLevel.addFreshEntity(soul);
+                            ModUtils.evilSwapVillagerAndPlayer(((LivingEntity) soul), player, event.getSource());
+                        } else {
+                            int deathCount = player.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
+                            player.getStats().setValue(player,Stats.CUSTOM.get(Stats.DEATHS),deathCount - 1);
                         }
+                        player.setRespawnPosition(player.level().dimension(),player.blockPosition(),player.getXRot(),true,false);
+                    }
+                    if (ModList.get().isLoaded("corpse")) {
+                        serverLevel.getAllEntities().forEach(entity -> {
+                            CompoundTag entityNBT = entity.serializeNBT();
+                            if (entityNBT.getString("id").equals("corpse:corpse")) {
+                                if (entityNBT.getCompound("Death").getString("PlayerName").equals(player.getName().getString())) {
+                                    entityNBT.getCompound("Death").putString("PlayerName", LAST_VILLAGER_NAME.get(player.getUUID()));
+                                    entity.deserializeNBT(entityNBT);
+                                }
+                            }
+                        });
                     }
 
                 }
@@ -226,59 +235,7 @@ public class MCADescendantsEvents {
                 boolean isDeath = !event.isEndConquered();
 
                 if (isDeath) {
-                    String soulName = LAST_VILLAGER_NAME.get(serverPlayer.getUUID());
-                    FamilyTree tree = FamilyTree.get(serverLevel);
-                    FamilyTreeNode playerNode = tree.getOrCreate(event.getEntity());
-
-                    Scoreboard scoreboard = serverLevel.getScoreboard();
-
-                    PlayerTeam ghostTeam = scoreboard.getPlayerTeam("ghosts");
-                    scoreboard.addPlayerToTeam(serverPlayer.getName().getString(), ghostTeam);
-
-                    ResourceKey<Level> targetDimension = ResourceKey.create(Registries.DIMENSION, new ResourceLocation(MCADescendants.MODID, "afterlife"));
-                    ServerLevel tpDim = serverPlayer.server.getLevel(targetDimension);
-                    BlockPos spawnPos = new BlockPos(16, 301, 6);
-                    assert tpDim != null;
-                    tpDim.setChunkForced(spawnPos.getX() >> 4, spawnPos.getZ() >> 4, true);
-                    serverPlayer.changeDimension(tpDim, new SimpleTeleporter(spawnPos.getX(),spawnPos.getY(),spawnPos.getZ()));
-                    ResourceLocation structureId = new ResourceLocation(MCADescendants.MODID, "waiting_room");
-                    StructureTemplate template = serverLevel.getStructureManager().get(structureId).orElse(null);
-                    StructureSpawnData structureSpawnData = StructureSpawnData.get(serverLevel);
-                    if (!structureSpawnData.hasSpawned()) {
-                        if (template != null) {
-                            BlockPos pos = new BlockPos(0, 300, 0);
-
-                            StructurePlaceSettings settings = new StructurePlaceSettings()
-                                    .setRotation(Rotation.NONE)
-                                    .setMirror(Mirror.NONE)
-                                    .setIgnoreEntities(false);
-
-                            template.placeInWorld(
-                                    tpDim,
-                                    pos,
-                                    pos,
-                                    settings,
-                                    tpDim.getRandom(),
-                                    2 // flags (2 = update neighbors)
-                            );
-
-                            structureSpawnData.setSpawned();
-                        }
-                    }
-                    BlockPos lecternPos = new BlockPos(10, 303, 21);
-                    BlockPos phonePos = new BlockPos(7, 304, 20);
-                    BlockPos wallPos = new BlockPos(7, 304, 21);
-                    BlockPos leverPos = new BlockPos(7, 304, 22);
-                    BlockState phoneState = tpDim.getBlockState(phonePos);
-                    BlockState wallState = tpDim.getBlockState(phonePos);
-                    BlockState leverState = tpDim.getBlockState(phonePos);
-                    ModUtils.placeBookOnLectern(tpDim, lecternPos, soulName, CHILDREN_COUNT.get(serverPlayer.getUUID()), GRANDCHILDREN_COUNT.get(serverPlayer.getUUID()), serverPlayer);
-                    tpDim.setBlock(wallPos, Blocks.GRAY_TERRACOTTA.defaultBlockState(),3);
-                    tpDim.setBlock(leverPos, Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.NORTH, RedstoneSide.SIDE),3);
-                    tpDim.updateNeighborsAt(leverPos, leverState.getBlock());
-                    tpDim.updateNeighborsAt(wallPos, wallState.getBlock());
-                    tpDim.updateNeighborsAt(phonePos, phoneState.getBlock());
-                    serverPlayer.setGameMode(GameType.ADVENTURE);
+                    RESPAWN_TICKS.put(serverPlayer.getUUID(),80);
                 }
             }
 
@@ -307,6 +264,8 @@ public class MCADescendantsEvents {
             }
 
 
+
+
             if(entity instanceof LivingEntity livingEntity && livingEntity.isAlive()){
                 if(entity.getTeam() == ghostTeam){
                     livingEntity.addEffect(new MobEffectInstance(ModEffects.SPIRIT.get(),-1,0,false,false));
@@ -321,9 +280,12 @@ public class MCADescendantsEvents {
                 }
             }
             if(entity instanceof ServerPlayer serverPlayer) {
+                if(MCADescendantsCommonConfig.INSTANT_RESPAWN.get()) {
+                    serverLevel.getGameRules().getRule(GameRules.RULE_DO_IMMEDIATE_RESPAWN).set(true,serverPlayer.server);
+                }
                 FamilyTreeNode playerNode = tree.getOrCreate(serverPlayer);
                 if (ghostTeam instanceof PlayerTeam playerTeam) {
-                    if (!PlayerSaveData.get(serverPlayer).getEntityData().getString("villagerName").equals("Soul")) {
+                    if (!PlayerSaveData.get(serverPlayer).getEntityData().getString("villagerName").equals("\uD83D\uDC7B")) {
                         scoreboard.removePlayerFromTeam(serverPlayer.getName().getString());
                     } else {
                         scoreboard.addPlayerToTeam(serverPlayer.getName().getString(), playerTeam);
@@ -334,24 +296,24 @@ public class MCADescendantsEvents {
                 if (!PlayerSaveData.get(serverPlayer).getEntityData().getString("villagerName").equals(playerNode.getName())) {
                     playerNode.setName(PlayerSaveData.get(serverPlayer).getEntityData().getString("villagerName"));
                 }
-                    UUID id = serverPlayer.getUUID();
-                    Set<UUID> descendantSet = new HashSet<>();
-                    DESCENDANTS.put(id, descendantSet);
-                    playerNode.children().forEach(descendantSet::add);
-                    getValidRespawnCandidates(playerNode, serverLevel).forEach(descendantSet::add);
-                    for (UUID uuid : descendantSet) {
-                        Entity e = serverLevel.getEntity(uuid);
-                        if (e instanceof VillagerLike<?>){
-                            if(e.isAlive()) {
-                                if(serverPlayer.tickCount % 100 == 0) {
-                                    data.update(e, id);
-                                }
+                UUID id = serverPlayer.getUUID();
+                Set<UUID> descendantSet = new HashSet<>();
+                DESCENDANTS.put(id, descendantSet);
+                playerNode.children().forEach(descendantSet::add);
+                getValidRespawnCandidates(playerNode, serverLevel).forEach(descendantSet::add);
+                for (UUID uuid : descendantSet) {
+                    Entity e = serverLevel.getEntity(uuid);
+                    if (e instanceof VillagerLike<?>){
+                        if(e.isAlive()) {
+                            if(serverPlayer.tickCount % 100 == 0) {
+                                data.update(e, id);
                             }
                         }
                     }
+                }
 
             }
-            else if(!(entity instanceof Player) && entity.serializeNBT().getString("villagerName").equals("Soul")) {
+            else if(!(entity instanceof Player) && entity.serializeNBT().getString("villagerName").equals("\uD83D\uDC7B")) {
                 entity.discard();
             }
         }
@@ -359,6 +321,86 @@ public class MCADescendantsEvents {
             if(entity instanceof Bee bee) {
                 bee.discard();
             }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onServerTick(TickEvent.ServerTickEvent event) {
+        Iterator<Map.Entry<UUID, Integer>> it = RESPAWN_TICKS.entrySet().iterator();
+
+        while (it.hasNext()) {
+            Map.Entry<UUID,Integer> entry = it.next();
+
+            int time = entry.getValue() -1;
+
+            if (time <= 0) {
+                ServerPlayer player = event.getServer().getPlayerList().getPlayer(entry.getKey());
+                ServerLevel serverLevel = player.serverLevel();
+
+
+                String soulName = LAST_VILLAGER_NAME.get(player.getUUID());
+                FamilyTree tree = FamilyTree.get(serverLevel);
+
+                Scoreboard scoreboard = serverLevel.getScoreboard();
+
+                PlayerTeam ghostTeam = scoreboard.getPlayerTeam("ghosts");
+                scoreboard.addPlayerToTeam(player.getName().getString(), ghostTeam);
+
+                ResourceKey<Level> targetDimension = ResourceKey.create(Registries.DIMENSION, new ResourceLocation(MCADescendants.MODID, "afterlife"));
+                ServerLevel tpDim = player.server.getLevel(targetDimension);
+                BlockPos spawnPos = new BlockPos(16, 302, 6);
+                assert tpDim != null;
+                tpDim.setChunkForced(spawnPos.getX() >> 4, spawnPos.getZ() >> 4, true);
+                player.changeDimension(tpDim, new SimpleTeleporter(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ()));
+                player.setGameMode(GameType.ADVENTURE);
+                ResourceLocation structureId = new ResourceLocation(MCADescendants.MODID, "waiting_room");
+                StructureTemplate template = serverLevel.getStructureManager().get(structureId).orElse(null);
+                StructureSpawnData structureSpawnData = StructureSpawnData.get(serverLevel);
+                if (!structureSpawnData.hasSpawned()) {
+                    if (template != null) {
+                        BlockPos pos = new BlockPos(0, 299, 0);
+
+                        StructurePlaceSettings settings = new StructurePlaceSettings()
+                                .setRotation(Rotation.NONE)
+                                .setMirror(Mirror.NONE)
+                                .addProcessor(BlockIgnoreProcessor.AIR)
+                                .setIgnoreEntities(false);
+
+                        template.placeInWorld(
+                                tpDim,
+                                pos,
+                                pos,
+                                settings,
+                                tpDim.getRandom(),
+                                2 // flags (2 = update neighbors)
+                        );
+
+                        structureSpawnData.setSpawned();
+                    }
+                }
+                BlockPos lecternPos = new BlockPos(10, 303, 21);
+                BlockPos phonePos = new BlockPos(7, 304, 20);
+                BlockPos wallPos = new BlockPos(7, 304, 21);
+                BlockPos leverPos = new BlockPos(7, 304, 22);
+                BlockState phoneState = tpDim.getBlockState(phonePos);
+                BlockState wallState = tpDim.getBlockState(phonePos);
+                BlockState leverState = tpDim.getBlockState(phonePos);
+                if(!soulName.equals("\uD83D\uDC7B")) {
+                    ModUtils.placeBookOnLectern(tpDim, lecternPos, soulName, CHILDREN_COUNT.get(player.getUUID()), GRANDCHILDREN_COUNT.get(player.getUUID()), player);
+                }
+                tpDim.setBlock(wallPos, Blocks.GRAY_TERRACOTTA.defaultBlockState(), 3);
+                tpDim.setBlock(leverPos, Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.NORTH, RedstoneSide.SIDE), 3);
+                tpDim.updateNeighborsAt(leverPos, leverState.getBlock());
+                tpDim.updateNeighborsAt(wallPos, wallState.getBlock());
+                tpDim.updateNeighborsAt(phonePos, phoneState.getBlock());
+                player.moveTo(spawnPos.getX(),spawnPos.getY() +2,spawnPos.getZ());
+
+                it.remove();
+            } else {
+                entry.setValue(time);
+            }
+
+
         }
     }
 
