@@ -1,0 +1,45 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+#issueTrackerURL = ""
+license = "Insert License Here"
+
+[[mods]]
+modId = "mca_descendants"
+version = "${version}"
+displayName = "MCA Descendants"
+authors = "DannyFather"
+description = '''
+Addon for MCA:Reborn. Adds the ability to respawn as your descendants while playing hardcore mode.
+'''
+#logoFile = ""
+
+[[dependencies.mca_descendants]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.mca_descendants]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.mca_descendants]]
+modId = "architectury"
+type = "required"
+versionRange = "[13.0.8,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.mca_descendants]]
+modId = "mca"
+type = "required"
+versionRange = "[7.7.7,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[mixins]]
+config = "mca_descendants.mixins.json"

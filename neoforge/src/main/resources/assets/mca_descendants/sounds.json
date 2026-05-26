@@ -1,0 +1,26 @@
+{
+  "phone_pickup": {
+    "subtitles": "subtitles.mca_descendants.phone_pickup",
+    "sounds": [
+      "mca_descendants:phone_pickup"
+    ]
+  },
+  "phone_dial_tone": {
+    "subtitles": "subtitles.mca_descendants.phone_dial_tone",
+    "sounds": [
+      "mca_descendants:phone_dial_tone"
+    ]
+  },
+  "phone_hangup": {
+    "subtitles": "subtitles.mca_descendants.phone_hangup",
+    "sounds": [
+      "mca_descendants:phone_hangup"
+    ]
+  },
+  "phone_ringing": {
+    "subtitles": "subtitles.mca_descendants.phone_ringing",
+    "sounds": [
+      "mca_descendants:phone_ringing"
+    ]
+  }
+}

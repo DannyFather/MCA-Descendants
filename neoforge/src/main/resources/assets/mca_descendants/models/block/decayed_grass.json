@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/grass_block",
+  "textures": {
+    "bottom": "mca_descendants:block/decayed_dirt",
+    "top": "mca_descendants:block/decayed_grass_top",
+    "side": "mca_descendants:block/decayed_grass_side",
+    "overlay": "mca_descendants:block/decayed_grass_side_overlay"
+  }
+}

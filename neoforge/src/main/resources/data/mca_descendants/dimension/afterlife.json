@@ -1,0 +1,24 @@
+{
+    "type": "mca_descendants:afterlife",
+    "generator": {
+        "type": "minecraft:noise",
+        "settings": "mca_descendants:afterlife",
+        "biome_source": {
+            "type": "minecraft:multi_noise",
+            "biomes": [
+                {
+                    "biome": "mca_descendants:limbo",
+                    "parameters": {
+                        "continentalness": 0,
+                        "depth": 0,
+                        "erosion": 0,
+                        "humidity": 0,
+                        "offset": 0,
+                        "temperature": 1,
+                        "weirdness": 0
+                    }
+                }
+            ]
+        }
+    }
+}
