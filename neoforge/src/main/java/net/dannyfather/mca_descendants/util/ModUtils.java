@@ -35,12 +35,14 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.Filterable;
 import net.minecraft.stats.Stat;
 import net.minecraft.stats.Stats;
+import net.minecraft.world.Containers;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.WrittenBookContent;
@@ -261,7 +263,7 @@ public class ModUtils {
         return soulNPC;
     }
 
-    public static void placeBookOnLectern(ServerLevel world, BlockPos pos, String playerName, int childrenCount, int grandchildrenCount, ServerPlayer pPlayer, String lastVillagerName) {
+    public static void placeBookOnLectern(ServerLevel world, BlockPos pos, String playerName, int childrenCount, int grandchildrenCount, ServerPlayer pPlayer) {
         //stats
         ResourceLocation id1 = ResourceLocation.fromNamespaceAndPath("mca","male_villager");
         ResourceLocation id2 = ResourceLocation.fromNamespaceAndPath("mca","female_villager");
@@ -304,14 +306,14 @@ public class ModUtils {
                                 Filterable.passThrough(
                                         Component.literal(
                                                 "§l§8Children: §r§4" + childrenCount + "\n" +
-                                                "\n" +
-                                                "§l§8Grandchildren: §r§4" + grandchildrenCount + "\n" +
-                                                "\n" +
-                                                "§l§8Mobs Killed: §r§4"+ mobsKilled +"§7\n" +
-                                                "   (Humans: §c"+humansKilled+"§7)\n" +
-                                                "   (Villagers: §c"+villagersKilled+"§7)" +
-                                                "\n\n\n" +
-                                                "§l§8Incarnation: §r§4" + deathCount + "\n")
+                                                        "\n" +
+                                                        "§l§8Grandchildren: §r§4" + grandchildrenCount + "\n" +
+                                                        "\n" +
+                                                        "§l§8Mobs Killed: §r§4"+ mobsKilled +"§7\n" +
+                                                        "   (Humans: §c"+humansKilled+"§7)\n" +
+                                                        "   (Villagers: §c"+villagersKilled+"§7)" +
+                                                        "\n\n\n" +
+                                                        "§l§8Incarnation: §r§4" + deathCount + "\n")
 
                                 ),
                                 Filterable.passThrough(
@@ -331,13 +333,19 @@ public class ModUtils {
                         ),
                         true
                 );
+                book.set(DataComponents.WRITTEN_BOOK_CONTENT, content);
 
-                if(pPlayer.hasCustomName() && !lastVillagerName.equals("\uD83D\uDC7B")) {
-                    book.set(DataComponents.WRITTEN_BOOK_CONTENT, content);
+                if(!playerName.equals("\uD83D\uDC7B")) {
+                    ItemStack currentBook = lectern.getBook().copy();
+                    if (!currentBook.isEmpty()) {
+                        Containers.dropItemStack(world,pos.getX(),pos.getY()+1f,pos.getZ(),currentBook);
+                    }
                     lectern.setBook(book);
-                    world.setBlock(pos,state.setValue(LecternBlock.HAS_BOOK,true),3);
+                    BlockState newState = world.getBlockState(pos);
+                    world.setBlock(pos, newState.setValue(LecternBlock.HAS_BOOK, true), 3);
                     lectern.setChanged();
                 }
+                world.sendBlockUpdated(pos,world.getBlockState(pos),world.getBlockState(pos),3);
 
             }
         }
@@ -431,7 +439,7 @@ public class ModUtils {
                 BlockState phoneState = tpDim.getBlockState(phonePos);
                 BlockState wallState = tpDim.getBlockState(phonePos);
                 BlockState leverState = tpDim.getBlockState(phonePos);
-                ModUtils.placeBookOnLectern(tpDim, lecternPos, soulName, CHILDREN_COUNT.get(serverPlayer.getUUID()), GRANDCHILDREN_COUNT.get(serverPlayer.getUUID()), serverPlayer,soulName);
+                ModUtils.placeBookOnLectern(tpDim, lecternPos, soulName, CHILDREN_COUNT.get(serverPlayer.getUUID()), GRANDCHILDREN_COUNT.get(serverPlayer.getUUID()), serverPlayer);
                 tpDim.setBlock(wallPos, Blocks.GRAY_TERRACOTTA.defaultBlockState(),3);
                 tpDim.setBlock(leverPos, Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.NORTH, RedstoneSide.SIDE),3);
                 tpDim.updateNeighborsAt(leverPos, leverState.getBlock());

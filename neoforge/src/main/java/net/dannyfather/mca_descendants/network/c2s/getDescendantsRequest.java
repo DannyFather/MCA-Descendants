@@ -20,6 +20,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.ChunkPos;
 
@@ -88,6 +89,11 @@ public record getDescendantsRequest() implements HandleablePayload {
                     .map(level::getEntity)
                     .filter(e -> e instanceof VillagerLike<?>)
                     .filter(Entity::isAlive)
+                    .filter(e -> {
+                        if(e instanceof LivingEntity livingEntity) {
+                                return !livingEntity.isBaby() || !MCADescendantsCommonConfig.ADULTS_ONLY.get();
+                        } else {return false;}
+                    })
                     .limit(100)
                     .forEach(e -> {
                         CompoundTag nbt = new CompoundTag();

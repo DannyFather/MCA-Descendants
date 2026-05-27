@@ -10,6 +10,7 @@ public class MCADescendantsCommonConfig {
     public static final ModConfigSpec.ConfigValue<Boolean> HARDCORE_ONLY;
     public static final ModConfigSpec.ConfigValue<Boolean> PLAY_AS_SIBLINGS;
     public static final ModConfigSpec.ConfigValue<Boolean> INSTANT_RESPAWN;
+    public static final ModConfigSpec.ConfigValue<Boolean> ADULTS_ONLY;
 
     static {
         BUILDER.push("Configs for MCA Descendants");
@@ -18,8 +19,9 @@ public class MCADescendantsCommonConfig {
                 .define("Hardcore Only", true);
 
         PLAY_AS_SIBLINGS = BUILDER.define("Play as Siblings",true);
+        INSTANT_RESPAWN = BUILDER.define("Instant Respawn", true);
 
-        INSTANT_RESPAWN = BUILDER.comment("Disabling may cause gamebreaking errors").define("Instant Respawn", true);
+        ADULTS_ONLY = BUILDER.comment("Only be able to spawn as fully grown offspring").define("Adults Only",false);
 
         BUILDER.pop();
         SPEC = BUILDER.build();

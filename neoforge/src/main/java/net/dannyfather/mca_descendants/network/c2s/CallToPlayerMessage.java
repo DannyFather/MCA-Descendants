@@ -62,7 +62,7 @@ public record CallToPlayerMessage(UUID uuid) implements HandleablePayload {
 
 
 
-            if(!player.getCustomName().equals("Soul"))  {
+            if(!player.getCustomName().equals("\uD83D\uDC7B"))  {
                 Entity soul = ModUtils.summonSoul(player,playerLevel);
                 soul.moveTo(playerBlockPos,player.getYRot(),player.getXRot());
                 playerLevel.addFreshEntity(soul);

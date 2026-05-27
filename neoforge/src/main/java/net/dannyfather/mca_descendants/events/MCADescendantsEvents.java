@@ -131,17 +131,6 @@ public class MCADescendantsEvents {
     }
 
 
-    @SubscribeEvent
-    public static void onLeaveEvent(EntityLeaveLevelEvent event) {
-        Entity entity = event.getEntity();
-        if(event.getLevel() instanceof ServerLevel serverLevel && entity instanceof VillagerLike<?>) {
-            DescendantLocationData data = DescendantLocationData.get(serverLevel);
-            serverLevel.getPlayers(serverPlayer -> {data.remove(entity,serverPlayer.getUUID());
-                return false;
-            });
-        }
-    }
-
 
 
     @SubscribeEvent
