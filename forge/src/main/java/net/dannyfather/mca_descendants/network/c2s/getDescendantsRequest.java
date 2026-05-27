@@ -71,7 +71,11 @@ public class getDescendantsRequest {
 
             CompoundTag familyData = new CompoundTag();
             FamilyTree tree = FamilyTree.get(player.serverLevel());
-            FamilyTreeNode playerNode = tree.getOrEmpty(PlayerSaveData.get(player).getEntityData().getUUID("UUID")).get();
+            FamilyTreeNode soulNode = tree.getOrCreate(player);
+            if(PlayerSaveData.get(player).getEntityData().getString("villagerName").equals("Soul")) {
+                soulNode = tree.getOrEmpty(PlayerSaveData.get(player).getEntityData().getUUID("UUID")).get();
+            }
+            FamilyTreeNode playerNode = soulNode;
 
             MinecraftServer server = player.server;
 
@@ -89,6 +93,11 @@ public class getDescendantsRequest {
                         .map(level::getEntity)
                         .filter(e -> e instanceof VillagerLike<?>)
                         .filter(Entity::isAlive)
+                        .filter(e -> {
+                            if(e instanceof LivingEntity livingEntity){
+                                return (!livingEntity.isBaby() || !MCADescendantsCommonConfig.ADULTS_ONLY.get());
+                            } else {return false;}
+                        })
                         .limit(100)
                         .forEach(e -> {
                             CompoundTag nbt = new CompoundTag();

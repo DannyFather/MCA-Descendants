@@ -111,7 +111,7 @@ public class MCADescendantsEvents {
                         String villagerName = PlayerSaveData.get(player).getEntityData().getString("villagerName");
                         LAST_VILLAGER_NAME.put(player.getUUID(), villagerName);
                         player.setGameMode(GameType.SPECTATOR);
-                        if(!PlayerSaveData.get(player).getEntityData().getString("villagerName").equals("\uD83D\uDC7B")) {
+                        if(!PlayerSaveData.get(player).getEntityData().getString("villagerName").equals("Soul")) {
                             Entity soul = ModUtils.summonSoul(player, serverLevel);
                             soul.moveTo(player.blockPosition(), player.getYRot(), player.getXRot());
                             serverLevel.addFreshEntity(soul);
@@ -285,7 +285,7 @@ public class MCADescendantsEvents {
                 }
                 FamilyTreeNode playerNode = tree.getOrCreate(serverPlayer);
                 if (ghostTeam instanceof PlayerTeam playerTeam) {
-                    if (!PlayerSaveData.get(serverPlayer).getEntityData().getString("villagerName").equals("\uD83D\uDC7B")) {
+                    if (!PlayerSaveData.get(serverPlayer).getEntityData().getString("villagerName").equals("Soul")) {
                         scoreboard.removePlayerFromTeam(serverPlayer.getName().getString());
                     } else {
                         scoreboard.addPlayerToTeam(serverPlayer.getName().getString(), playerTeam);
@@ -313,7 +313,7 @@ public class MCADescendantsEvents {
                 }
 
             }
-            else if(!(entity instanceof Player) && entity.serializeNBT().getString("villagerName").equals("\uD83D\uDC7B")) {
+            else if(!(entity instanceof Player) && entity.serializeNBT().getString("villagerName").equals("Soul")) {
                 entity.discard();
             }
         }
@@ -385,15 +385,17 @@ public class MCADescendantsEvents {
                 BlockState phoneState = tpDim.getBlockState(phonePos);
                 BlockState wallState = tpDim.getBlockState(phonePos);
                 BlockState leverState = tpDim.getBlockState(phonePos);
-                if(!soulName.equals("\uD83D\uDC7B")) {
-                    ModUtils.placeBookOnLectern(tpDim, lecternPos, soulName, CHILDREN_COUNT.get(player.getUUID()), GRANDCHILDREN_COUNT.get(player.getUUID()), player);
-                }
+                ModUtils.placeBookOnLectern(tpDim, lecternPos, soulName, CHILDREN_COUNT.get(player.getUUID()), GRANDCHILDREN_COUNT.get(player.getUUID()), player);
                 tpDim.setBlock(wallPos, Blocks.GRAY_TERRACOTTA.defaultBlockState(), 3);
                 tpDim.setBlock(leverPos, Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.NORTH, RedstoneSide.SIDE), 3);
                 tpDim.updateNeighborsAt(leverPos, leverState.getBlock());
                 tpDim.updateNeighborsAt(wallPos, wallState.getBlock());
                 tpDim.updateNeighborsAt(phonePos, phoneState.getBlock());
-                player.moveTo(spawnPos.getX(),spawnPos.getY() +2,spawnPos.getZ());
+                //if forge were a person i'd slit their fucking throat zero hesitation.
+                player.server.execute(() -> {
+                    player.changeDimension(tpDim, new SimpleTeleporter(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ()));
+
+                });
 
                 it.remove();
             } else {

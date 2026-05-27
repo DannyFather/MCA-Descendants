@@ -1,14 +1,18 @@
 package net.dannyfather.mca_descendants.network.c2s;
 
 import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.mca.server.world.data.FamilyTree;
+import forge.net.mca.server.world.data.PlayerSaveData;
 import net.dannyfather.mca_descendants.util.ModUtils;
 import net.dannyfather.mca_descendants.worldgen.teleporters.SimpleTeleporter;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -65,6 +69,9 @@ public class CallToPlayerMessage {
             for (int k = 0; k < 27; k++) {
                 player.getInventory().add(v.getInventory().getItem(k));
             }
+
+            BlockPos playerBlockPos = player.blockPosition();
+            ServerLevel playerLevel = player.serverLevel();
 
             player.changeDimension(
                     targetLevel,

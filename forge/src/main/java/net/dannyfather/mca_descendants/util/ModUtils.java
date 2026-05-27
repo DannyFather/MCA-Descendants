@@ -23,6 +23,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stat;
 import net.minecraft.stats.Stats;
+import net.minecraft.world.Containers;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -233,7 +234,7 @@ public class ModUtils {
         soulNBTData.remove("tree_mother_UUID");
         soulNBTData.remove("tree_father_UUID");
         soulNBTData.remove("tree_spouse_UUID");
-        soulNBTData.putString("villagerName","\uD83D\uDC7B");
+        soulNBTData.putString("villagerName","Soul");
         if (PlayerSaveData.get(serverPlayer).getEntityData().getInt("playerModel") >= 1) {
             soulNBTData.putString("custom_skin", serverPlayer.getName().getString());
         }
@@ -243,7 +244,7 @@ public class ModUtils {
         VillagerEntityMCA soulNPC = (VillagerEntityMCA) soulEntity;
         assert soulNPC != null;
         soulNPC.setCustomNameVisible(true);
-        soulNPC.setCustomName(Component.literal("\uD83D\uDC7B"));
+        soulNPC.setCustomName(Component.literal("Soul"));
         soulNPC.getTraits().addTrait(ASEXUAL);
         soulNPC.getTraits().addTrait(COLOR_BLIND);
         soulNPC.getGenetics().setGene(Genetics.SKIN, 0f);
@@ -254,8 +255,6 @@ public class ModUtils {
     public static void placeBookOnLectern(ServerLevel world, BlockPos pos, String playerName,int childrenCount,int grandchildrenCount, ServerPlayer pPlayer) {
         BlockEntity be = world.getBlockEntity(pos);
         if (be instanceof LecternBlockEntity lectern) {
-
-            // Create a new written book
             ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
             CompoundTag bookTag = book.getOrCreateTag();
             bookTag.putString("title", playerName + "\'s Statistics");
@@ -311,11 +310,13 @@ public class ModUtils {
             pages.add(StringTag.valueOf("{\"text\":\""+ "§lCause of Death:\\n\\n§r§4"+ deathMsg +"\"}"));
             bookTag.put("pages", pages);
 
-            // Place book on lectern
+            // The Neoforge version of this mod has better lectern mechanics, but because coding in forge 1.20.1 (specifically 1.20.1) is actually fucking cancer, like asbestos level toxic in how FUCKING RETARDED it handles lecternblocks, so if you wanted it like the neo version, FUCK YOU.
             lectern.setBook(book);
             BlockState state = world.getBlockState(pos);
             world.setBlock(pos, state.setValue(LecternBlock.HAS_BOOK, true), 3);
             lectern.setChanged();
+
+
         }
     }
 
