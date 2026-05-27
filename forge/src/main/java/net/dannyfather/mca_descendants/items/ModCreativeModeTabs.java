@@ -15,7 +15,7 @@ public class ModCreativeModeTabs {
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MCADescendants.MODID);
 
     public static final RegistryObject<CreativeModeTab> MCA_REBORN_TAB = CREATIVE_MODE_TABS.register("mca_descendants",
-            () -> CreativeModeTab.builder().icon(() -> new ItemStack(ModBlocks.DECAYED_DIRT.get()))
+            () -> CreativeModeTab.builder().icon(() -> new ItemStack(ModBlocks.PHONE.get()))
                     .title(Component.translatable("creativetab.mca_descendants_tab"))
                     .displayItems(((pParameters, pOutput) -> {
                         pOutput.accept(ModBlocks.DECAYED_DIRT.get());
