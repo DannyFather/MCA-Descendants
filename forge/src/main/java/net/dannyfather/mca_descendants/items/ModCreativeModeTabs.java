@@ -21,9 +21,6 @@ public class ModCreativeModeTabs {
                         pOutput.accept(ModBlocks.DECAYED_DIRT.get());
                         pOutput.accept(ModBlocks.DECAYED_GRASS.get());
                         pOutput.accept(ModBlocks.PHONE.get());
-                        pOutput.accept(ModItems.EVILVILLAGERGRABBER.get());
-                        pOutput.accept(ModItems.GOODVILLAGEGRABBER.get());
-                        pOutput.accept(ModItems.VILLAGERGRABBER.get());
                     })).build());
 
     public static void register(IEventBus eventBus) {CREATIVE_MODE_TABS.register(eventBus);}
