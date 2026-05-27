@@ -6,6 +6,7 @@ import net.dannyfather.mca_descendants.client.gui.PhoneScreen;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.effects.ModEffects;
 import net.dannyfather.mca_descendants.events.ClientModEvents;
+import net.dannyfather.mca_descendants.item.ModCreativeTabs;
 import net.dannyfather.mca_descendants.item.ModItems;
 import net.dannyfather.mca_descendants.network.*;
 import net.dannyfather.mca_descendants.network.c2s.CallToPlayerMessage;
@@ -66,6 +67,7 @@ public class MCADescendants {
                 MCADescendantsCommonConfig.SPEC
         );
 
+        ModCreativeTabs.register(modEventBus);
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
