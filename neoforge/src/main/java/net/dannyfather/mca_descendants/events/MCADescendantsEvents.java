@@ -75,14 +75,14 @@ public class MCADescendantsEvents {
     public static final Map<UUID, Integer> CHILDREN_COUNT = new HashMap<>();
     public static final Map<UUID, Integer> GRANDCHILDREN_COUNT = new HashMap<>();
     public static final Map<UUID, Set<UUID>> DESCENDANTS = new HashMap<>();
-    private static final Map<UUID, Integer> RESPAWN_TICKS = new HashMap<>();
+    public static final Map<UUID, Integer> RESPAWN_TICKS = new HashMap<>();
 
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
         if(event.getEntity().level() instanceof ServerLevel serverLevel) {
             if(event.getEntity() instanceof ServerPlayer player) {
                 if (serverLevel.getLevelData().isHardcore() || !MCADescendantsCommonConfig.HARDCORE_ONLY.get()) {
-                    if (!ModList.get().isLoaded("sync")) {
+                    if (!ModList.get().isLoaded("neosync")) {
                         FamilyTree tree = FamilyTree.get(serverLevel);
                         FamilyTreeNode playerNode = tree.getOrEmpty(player.getUUID()).get();
                         int childrenCount = playerNode.children().size();
@@ -97,23 +97,23 @@ public class MCADescendantsEvents {
                         LAST_VILLAGER_NAME.put(player.getUUID(), villagerName);
                         player.setRespawnPosition(player.level().dimension(),player.blockPosition(),0F,true,false);
                         if(player.hasCustomName()) {
-                            if(!player.getCustomName().getString().equals("\uD83D\uDC7B")){
-                            Entity soul = ModUtils.summonSoul(player, serverLevel);
-                            soul.moveTo(player.blockPosition(), player.getYRot(), player.getXRot());
-                            serverLevel.addFreshEntity(soul);
-                            ModUtils.evilSwapVillagerAndPlayer(((LivingEntity) soul), player, event.getSource());
-                            if (ModList.get().isLoaded("corpse")) {
-                                serverLevel.getAllEntities().forEach(entity -> {
-                                    CompoundTag entityNBT = new CompoundTag();
-                                    entity.save(entityNBT);
-                                    if (entityNBT.getString("id").equals("corpse:corpse")) {
-                                        if (entityNBT.getCompound("Death").getString("PlayerName").equals(player.getName().getString())) {
-                                            entityNBT.getCompound("Death").putString("PlayerName", LAST_VILLAGER_NAME.get(player.getUUID()));
-                                            entity.load(entityNBT);
+                            if(!player.getCustomName().getString().equals("e")){
+                                Entity soul = ModUtils.summonSoul(player, serverLevel);
+                                soul.moveTo(player.blockPosition(), player.getYRot(), player.getXRot());
+                                serverLevel.addFreshEntity(soul);
+                                ModUtils.evilSwapVillagerAndPlayer(((LivingEntity) soul), player, event.getSource());
+                                if (ModList.get().isLoaded("corpse")) {
+                                    serverLevel.getAllEntities().forEach(entity -> {
+                                        CompoundTag entityNBT = new CompoundTag();
+                                        entity.save(entityNBT);
+                                        if (entityNBT.getString("id").equals("corpse:corpse")) {
+                                            if (entityNBT.getCompound("Death").getString("PlayerName").equals(player.getName().getString())) {
+                                                entityNBT.getCompound("Death").putString("PlayerName", LAST_VILLAGER_NAME.get(player.getUUID()));
+                                                entity.load(entityNBT);
+                                            }
                                         }
-                                    }
-                                });
-                            }
+                                    });
+                                }
                             } else {
                                 int deathCount = player.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
                                 player.getStats().setValue(player,Stats.CUSTOM.get(Stats.DEATHS),deathCount - 1);
@@ -227,12 +227,11 @@ public class MCADescendantsEvents {
     @SubscribeEvent
     public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
         if (event.getEntity().level() instanceof ServerLevel serverLevel && event.getEntity() instanceof ServerPlayer serverPlayer) {
-            if(serverLevel.getLevelData().isHardcore() || !MCADescendantsCommonConfig.HARDCORE_ONLY.get()) {
+            if (serverLevel.getLevelData().isHardcore() || !MCADescendantsCommonConfig.HARDCORE_ONLY.get()) {
                 boolean isDeath = !event.isEndConquered();
 
                 if (isDeath) {
-                    RESPAWN_TICKS.put(serverPlayer.getUUID(),80);
-
+                    RESPAWN_TICKS.put(serverPlayer.getUUID(), 80);
 
 
                 }
@@ -281,7 +280,7 @@ public class MCADescendantsEvents {
 
             if(entity instanceof ServerPlayer serverPlayer) {
                 FamilyTreeNode playerNode = tree.getOrCreate(serverPlayer);
-                if(MCADescendantsCommonConfig.INSTANT_RESPAWN.get()) {
+                if(MCADescendantsCommonConfig.INSTANT_RESPAWN.get() && !ModList.get().isLoaded("neosync")) {
                     serverLevel.getGameRules().getRule(GameRules.RULE_DO_IMMEDIATE_RESPAWN).set(true,serverPlayer.server);
                 }
 
@@ -344,7 +343,6 @@ public class MCADescendantsEvents {
 
                 if (player != null) {
                     MinecraftServer server = player.getServer();
-                    FamilyTree tree = FamilyTree.get(serverLevel);
 
                     Scoreboard scoreboard = serverLevel.getScoreboard();
 
@@ -358,9 +356,9 @@ public class MCADescendantsEvents {
 
                     tpDim.getChunkAt(spawnPos);
                     player.getServer().execute(
-                                () -> {
-                                    respawnAfterlife(player, tpDim, spawnPos, server);
-                    });
+                            () -> {
+                                respawnAfterlife(player, tpDim, spawnPos, server);
+                            });
                 }
 
                 it.remove();

@@ -5,6 +5,7 @@ import net.dannyfather.mca_descendants.block.ModBlocks;
 import net.dannyfather.mca_descendants.client.gui.PhoneScreen;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.effects.ModEffects;
+import net.dannyfather.mca_descendants.entity.ModEntities;
 import net.dannyfather.mca_descendants.events.ClientModEvents;
 import net.dannyfather.mca_descendants.item.ModCreativeTabs;
 import net.dannyfather.mca_descendants.item.ModItems;
@@ -58,6 +59,7 @@ public class MCADescendants {
 
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
+        ModEntities.register(modEventBus);
         ModSounds.register(modEventBus);
         ModEffects.register(modEventBus);
 

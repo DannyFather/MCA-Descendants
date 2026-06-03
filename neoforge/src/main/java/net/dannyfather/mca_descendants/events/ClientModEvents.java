@@ -3,6 +3,8 @@ package net.dannyfather.mca_descendants.events;
 import net.dannyfather.mca_descendants.ClientProxy;
 import net.dannyfather.mca_descendants.block.ModBlocks;
 import net.dannyfather.mca_descendants.client.gui.PhoneScreen;
+import net.dannyfather.mca_descendants.entity.ModEntities;
+import net.dannyfather.mca_descendants.entity.layers.BabySittingRenderer;
 import net.dannyfather.mca_descendants.network.s2c.OpenGuiRequest;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.color.block.BlockColors;
@@ -14,6 +16,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
@@ -24,6 +27,8 @@ public class ClientModEvents {
 
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
+
+
 
         ItemBlockRenderTypes.setRenderLayer(
                 ModBlocks.DECAYED_GRASS.get(),
@@ -60,6 +65,14 @@ public class ClientModEvents {
         );
         new ClientProxy.Impl();
 
+    }
+
+    @SubscribeEvent
+    public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(
+                ModEntities.BABY_SEAT.get(),
+                BabySittingRenderer::new
+        );
     }
 
     public static void openPhoneScreen() {

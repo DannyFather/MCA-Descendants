@@ -185,12 +185,12 @@ public class ModUtils {
                     playerNode.children().add(vchildUUID);
                 }
                 PlayerSaveData.get(pPlayer).setEntityData(villagerMCAData);
-
                 pPlayer.serverLevel().players().forEach(p -> {
                     Network.sendToPlayer(new PlayerDataMessage(pPlayer.getUUID(), villagerMCAData), p);
                     FamilyTreeNode pNode = FamilyTree.get(p.serverLevel()).getOrCreate(p);
                     pNode.setName(p.getCustomName().getString());
                 });
+                playerNode.setName(pPlayer.getCustomName().getString());
 
             }
         }

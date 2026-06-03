@@ -14,5 +14,9 @@
   "subtitles.mca_descendants.phone_pickup": "Phone Picked Up",
   "subtitles.mca_descendants.phone_hangup": "Phone Hung Up",
   "subtitles.mca_descendants.phone_dial_tone": "Dial Tone",
-  "subtitles.mca_descendants.phone_ringing": "Phone Ringing"
+  "subtitles.mca_descendants.phone_ringing": "Phone Ringing",
+  "actionbar.ages.toddler": "You have grown into a Toddler!",
+  "actionbar.ages.child": "You have grown into a Child!",
+  "actionbar.ages.teen": "You have grown into a Teenager!",
+  "actionbar.ages.adult": "You have grown into an Adult!"
 }
