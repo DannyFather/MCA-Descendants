@@ -54,7 +54,6 @@ public class MCADescendants {
 
     public MCADescendants(IEventBus modEventBus, ModContainer modContainer) {
 
-        modEventBus.addListener(this::addCreative);
         modEventBus.addListener(this::onRegisterPayloadHandlers);
 
         ModItems.register(modEventBus);
@@ -70,14 +69,6 @@ public class MCADescendants {
         );
 
         ModCreativeTabs.register(modEventBus);
-    }
-
-    private void addCreative(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == CreativeModeTabs.INGREDIENTS) {
-            event.accept(ModItems.VILLAGERGRABBER);
-            event.accept(ModItems.EVILVILLAGERGRABBER);
-            event.accept(ModItems.GOODVILLAGERGRABBER);
-        }
     }
 
     @SubscribeEvent
