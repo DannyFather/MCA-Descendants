@@ -4,8 +4,9 @@ import com.mojang.logging.LogUtils;
 
 import net.dannyfather.mca_descendants.block.ModBlocks;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
-import net.dannyfather.mca_descendants.config.MCADescendantsServerConfig;
 import net.dannyfather.mca_descendants.effects.ModEffects;
+import net.dannyfather.mca_descendants.entity.ModEntities;
+import net.dannyfather.mca_descendants.entity.layers.BabySittingRenderer;
 import net.dannyfather.mca_descendants.items.ModCreativeModeTabs;
 import net.dannyfather.mca_descendants.items.ModItems;
 import net.dannyfather.mca_descendants.network.ClientInteractionManager;
@@ -25,6 +26,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.WritableBookItem;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
@@ -54,13 +56,13 @@ public class MCADescendants
 
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
+        ModEntities.register(modEventBus);
         ModEffects.register(modEventBus);
         ModCreativeModeTabs.register(modEventBus);
         ModSounds.register(modEventBus);
         modEventBus.addListener(this::commonSetup);
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, MCADescendantsCommonConfig.SPEC,"mca-descendants.toml");
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, MCADescendantsServerConfig.SERVER_SPEC,"mca-descendants-server.toml");
 
         MinecraftForge.EVENT_BUS.register(this);
 
@@ -126,5 +128,14 @@ public class MCADescendants
 
             });
         }
+
+        @SubscribeEvent
+        public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+            event.registerEntityRenderer(
+                    ModEntities.BABY_SEAT.get(),
+                    BabySittingRenderer::new
+            );
+        }
+
     }
 }

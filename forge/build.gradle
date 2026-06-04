@@ -34,6 +34,7 @@ dependencies {
     modImplementation "dev.architectury:architectury-forge:$rootProject.architectury_api_version"
     compileOnly files("libs/Sync-0.1.8.jar")
     compileOnly files("libs/corpse-forge-1.20.1-1.0.23.jar")
+    compileOnly files("libs/pmmo-1.20.1-1.7.40.jar")
 
     common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
     shadowBundle project(path: ':common', configuration: 'transformProductionForge')

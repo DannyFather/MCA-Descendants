@@ -3,6 +3,11 @@ package net.dannyfather.mca_descendants.network.c2s;
 import forge.net.mca.entity.VillagerEntityMCA;
 import forge.net.mca.server.world.data.FamilyTree;
 import forge.net.mca.server.world.data.PlayerSaveData;
+import harmonised.pmmo.core.Core;
+import harmonised.pmmo.core.IDataStorage;
+import harmonised.pmmo.network.Networking;
+import harmonised.pmmo.network.clientpackets.CP_SyncData_ClearXp;
+import net.dannyfather.mca_descendants.events.MCAGrowthEvents;
 import net.dannyfather.mca_descendants.util.ModUtils;
 import net.dannyfather.mca_descendants.worldgen.teleporters.SimpleTeleporter;
 import net.minecraft.core.BlockPos;
@@ -13,11 +18,16 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.network.NetworkEvent;
 
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.function.Supplier;
+
+import static net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig.INSTANT_GROWTH;
+import static net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig.RESET_PMMO_STATS;
 
 public class CallToPlayerMessage {
 
@@ -62,7 +72,7 @@ public class CallToPlayerMessage {
                 return;
             }
 
-            if (v.isBaby()) {
+            if (v.isBaby() && INSTANT_GROWTH.get()) {
                 v.setAge(0);
             }
 
@@ -97,6 +107,12 @@ public class CallToPlayerMessage {
             }
 
             ModUtils.removeStats(player);
+            MCAGrowthEvents.updatePlayerAttributes(player);
+            if(ModList.get().isLoaded("pmmo") && RESET_PMMO_STATS.get()) {
+                IDataStorage data = Core.get(LogicalSide.SERVER).getData();
+                data.setXpMap(player.getUUID(), new HashMap<>());
+                Networking.sendToClient(new CP_SyncData_ClearXp(), player);
+            }
         });
 
         ctx.get().setPacketHandled(true);

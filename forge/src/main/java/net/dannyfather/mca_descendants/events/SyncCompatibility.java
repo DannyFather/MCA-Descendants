@@ -64,7 +64,7 @@ public class SyncCompatibility {
                         String villagerName = PlayerSaveData.get(player).getEntityData().getString("villagerName");
                         LAST_VILLAGER_NAME.put(player.getUUID(), villagerName);
                         player.setGameMode(GameType.SPECTATOR);
-                        if(!PlayerSaveData.get(player).getEntityData().getString("villagerName").equals("\uD83D\uDC7B")) {
+                        if(!PlayerSaveData.get(player).getEntityData().getString("villagerName").equals("Soul")) {
                             Entity soul = ModUtils.summonSoul(player, serverLevel);
                             soul.moveTo(player.blockPosition(), player.getYRot(), player.getXRot());
                             serverLevel.addFreshEntity(soul);

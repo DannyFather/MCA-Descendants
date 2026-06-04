@@ -9,7 +9,6 @@ import net.dannyfather.mca_descendants.block.ModBlocks;
 import net.dannyfather.mca_descendants.block.custom.PhoneBlock;
 import net.dannyfather.mca_descendants.client.gui.PhoneScreen;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
-import net.dannyfather.mca_descendants.config.MCADescendantsServerConfig;
 import net.dannyfather.mca_descendants.effects.ModEffects;
 import net.dannyfather.mca_descendants.server.world.data.DescendantLocationData;
 import net.dannyfather.mca_descendants.util.ModUtils;
@@ -98,7 +97,7 @@ public class MCADescendantsEvents {
     public static void onLivingDeath(LivingDeathEvent event) {
         if(event.getEntity().level() instanceof ServerLevel serverLevel) {
             if(event.getEntity() instanceof ServerPlayer player) {
-                if (serverLevel.getLevelData().isHardcore() || !MCADescendantsCommonConfig.HARDCORE_ONLY.get() || !MCADescendantsServerConfig.SERVER.SERVER_HARDCORE_ONLY.get()) {
+                if (serverLevel.getLevelData().isHardcore() || !MCADescendantsCommonConfig.HARDCORE_ONLY.get()) {
                     if (!ModList.get().isLoaded("sync")) {
                         FamilyTree tree = FamilyTree.get(serverLevel);
                         FamilyTreeNode playerNode = tree.getOrEmpty(player.getUUID()).get();
@@ -121,17 +120,6 @@ public class MCADescendantsEvents {
                             player.getStats().setValue(player,Stats.CUSTOM.get(Stats.DEATHS),deathCount - 1);
                         }
                         player.setRespawnPosition(player.level().dimension(),player.blockPosition(),player.getXRot(),true,false);
-                    }
-                    if (ModList.get().isLoaded("corpse")) {
-                        serverLevel.getAllEntities().forEach(entity -> {
-                            CompoundTag entityNBT = entity.serializeNBT();
-                            if (entityNBT.getString("id").equals("corpse:corpse")) {
-                                if (entityNBT.getCompound("Death").getString("PlayerName").equals(player.getName().getString())) {
-                                    entityNBT.getCompound("Death").putString("PlayerName", LAST_VILLAGER_NAME.get(player.getUUID()));
-                                    entity.deserializeNBT(entityNBT);
-                                }
-                            }
-                        });
                     }
 
                 }
