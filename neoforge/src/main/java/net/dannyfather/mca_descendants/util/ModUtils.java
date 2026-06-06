@@ -96,6 +96,12 @@ public class ModUtils {
                 serverLevel.addFreshEntity(newVillagerEntity);
                 pPlayer.setCustomName(newName);
 
+                PlayerSaveData.get(pPlayer).setEntityData(villagerMCAData);
+                pPlayer.serverLevel().players().forEach(p -> {
+                    Network.sendToPlayer(new PlayerDataMessage(pPlayer.getUUID(), villagerMCAData), p);
+                    FamilyTreeNode pNode = FamilyTree.get(p.serverLevel()).getOrCreate(p);
+                    pNode.setName(p.getCustomName().getString());
+                });
 
 
 
@@ -104,6 +110,7 @@ public class ModUtils {
                 //
                 FamilyTreeNode playerNode = tree.getOrCreate(pPlayer);
                 FamilyTreeNode villagerNode = tree.getOrEmpty(target.getUUID()).orElse(null);
+                playerNode.setName(pPlayer.getCustomName().getString());
 
                 Gender villagerGender = villagerNode.gender();
                 if (playerVillagerData.getInt("Gender") == 1) {
@@ -184,13 +191,6 @@ public class ModUtils {
 
                     playerNode.children().add(vchildUUID);
                 }
-                PlayerSaveData.get(pPlayer).setEntityData(villagerMCAData);
-                pPlayer.serverLevel().players().forEach(p -> {
-                    Network.sendToPlayer(new PlayerDataMessage(pPlayer.getUUID(), villagerMCAData), p);
-                    FamilyTreeNode pNode = FamilyTree.get(p.serverLevel()).getOrCreate(p);
-                    pNode.setName(p.getCustomName().getString());
-                });
-                playerNode.setName(pPlayer.getCustomName().getString());
 
             }
         }
@@ -222,11 +222,9 @@ public class ModUtils {
             swapVillagerAndPlayer(target, pPlayer);
             Scoreboard scoreboard = serverLevel.getScoreboard();
             scoreboard.removePlayerFromTeam(pPlayer.getName().getString());
-            Vec3 targetPos = target.position();
             Entity entity = serverLevel.getEntity(villagerUUID);
-            pPlayer.teleportTo(targetPos.x,targetPos.y,targetPos.z);
             pPlayer.removeAllEffects();
-            pPlayer.setGameMode(GameType.SURVIVAL);
+            pPlayer.setGameMode(pPlayer.server.getDefaultGameType());
             FamilyTree tree = FamilyTree.get(serverLevel);
             tree.remove(entity.getUUID());
             entity.discard();

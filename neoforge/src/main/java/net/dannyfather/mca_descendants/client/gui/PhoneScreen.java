@@ -10,6 +10,7 @@ import net.conczin.mca.util.compat.ButtonWidget;
 import net.dannyfather.mca_descendants.network.ModNetwork;
 import net.dannyfather.mca_descendants.network.c2s.CallToPlayerMessage;
 import net.dannyfather.mca_descendants.network.c2s.getDescendantsRequest;
+import net.dannyfather.mca_descendants.network.s2c.OpenGuiRequest;
 import net.dannyfather.mca_descendants.network.s2c.getDescendantResponse;
 import net.dannyfather.mca_descendants.sound.ModSounds;
 import net.minecraft.client.Minecraft;
@@ -88,6 +89,10 @@ public class PhoneScreen extends Screen {
         callButton = addRenderableWidget(new ButtonWidget(width / 2 - 100, height / 2 + 90, 60, 20, Component.translatable("gui.button.call"), (b) -> {
             ModNetwork.sendToServer(new CallToPlayerMessage(UUID.fromString(keys.get(selectedIndex))));
             Objects.requireNonNull(this.minecraft).setScreen(null);
+        }));
+
+        addRenderableWidget(new ButtonWidget(width / 2 - 35, height / 2 + 90, 70, 20, Component.translatable("gui.phone.options"), b -> {
+            Minecraft.getInstance().setScreen(new PhoneOptionsScreen());
         }));
 
         addRenderableWidget(new ButtonWidget(width / 2 + 40, height / 2 + 90, 60, 20, Component.translatable("gui.button.exit"), b -> Objects.requireNonNull(this.minecraft).setScreen(null)));

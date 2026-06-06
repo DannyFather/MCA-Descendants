@@ -1,5 +1,6 @@
 package net.dannyfather.mca_descendants.network;
 
+import net.dannyfather.mca_descendants.client.gui.PhoneOptionsScreen;
 import net.dannyfather.mca_descendants.client.gui.PhoneScreen;
 import net.dannyfather.mca_descendants.network.s2c.OpenGuiRequest;
 import net.dannyfather.mca_descendants.network.s2c.getDescendantResponse;
@@ -27,6 +28,14 @@ public class ClientHandlerImpl implements ClientHandler {
                         if (client.player == null || client.level == null) return;
 
                         client.setScreen(new PhoneScreen());
+                    });
+                }
+
+                case PHONEOPTIONS -> {
+                    client.execute(() -> {
+                        if (client.player == null || client.level == null) return;
+
+                        client.setScreen(new PhoneOptionsScreen());
                     });
                 }
             }

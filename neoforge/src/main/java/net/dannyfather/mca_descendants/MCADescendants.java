@@ -11,6 +11,8 @@ import net.dannyfather.mca_descendants.item.ModCreativeTabs;
 import net.dannyfather.mca_descendants.item.ModItems;
 import net.dannyfather.mca_descendants.network.*;
 import net.dannyfather.mca_descendants.network.c2s.CallToPlayerMessage;
+import net.dannyfather.mca_descendants.network.c2s.RandomToPlayerMessage;
+import net.dannyfather.mca_descendants.network.c2s.SpectateWorldMessage;
 import net.dannyfather.mca_descendants.network.c2s.getDescendantsRequest;
 import net.dannyfather.mca_descendants.network.s2c.OpenGuiRequest;
 import net.dannyfather.mca_descendants.network.s2c.getDescendantResponse;
@@ -104,6 +106,18 @@ public class MCADescendants {
         registrar.playToServer(
                 CallToPlayerMessage.TYPE,
                 CallToPlayerMessage.STREAM_CODEC,
+                (msg, ctx) -> ctx.enqueueWork(() -> msg.handleServer((ServerPlayer) ctx.player()))
+        );
+
+        registrar.playToServer(
+                RandomToPlayerMessage.TYPE,
+                RandomToPlayerMessage.STREAM_CODEC,
+                (msg, ctx) -> ctx.enqueueWork(() -> msg.handleServer((ServerPlayer) ctx.player()))
+        );
+
+        registrar.playToServer(
+                SpectateWorldMessage.TYPE,
+                SpectateWorldMessage.STREAM_CODEC,
                 (msg, ctx) -> ctx.enqueueWork(() -> msg.handleServer((ServerPlayer) ctx.player()))
         );
 

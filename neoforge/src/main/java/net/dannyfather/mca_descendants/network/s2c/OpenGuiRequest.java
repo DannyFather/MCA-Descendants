@@ -45,6 +45,7 @@ public record OpenGuiRequest(int gui, int villager) implements HandleablePayload
     }
 
     public enum Type {
-        PHONE
+        PHONE,
+        PHONEOPTIONS
     }
 }

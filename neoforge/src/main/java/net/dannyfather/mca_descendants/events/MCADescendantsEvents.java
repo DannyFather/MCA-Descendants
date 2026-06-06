@@ -231,6 +231,7 @@ public class MCADescendantsEvents {
                 boolean isDeath = !event.isEndConquered();
 
                 if (isDeath) {
+                    serverPlayer.setGameMode(GameType.SPECTATOR);
                     RESPAWN_TICKS.put(serverPlayer.getUUID(), 80);
 
 
@@ -280,7 +281,7 @@ public class MCADescendantsEvents {
 
             if(entity instanceof ServerPlayer serverPlayer) {
                 FamilyTreeNode playerNode = tree.getOrCreate(serverPlayer);
-                if(MCADescendantsCommonConfig.INSTANT_RESPAWN.get() && !ModList.get().isLoaded("neosync")) {
+                if(MCADescendantsCommonConfig.INSTANT_RESPAWN.get() && !ModList.get().isLoaded("neosync") && (serverLevel.getLevelData().isHardcore() || !MCADescendantsCommonConfig.HARDCORE_ONLY.get())) {
                     serverLevel.getGameRules().getRule(GameRules.RULE_DO_IMMEDIATE_RESPAWN).set(true,serverPlayer.server);
                 }
 

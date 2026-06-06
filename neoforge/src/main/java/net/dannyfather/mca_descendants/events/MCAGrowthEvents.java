@@ -126,22 +126,22 @@ public class MCAGrowthEvents {
         if (playerSpeed != null && playerHealth != null) {
             if (ageState == 1) {
                 playerSpeed.setBaseValue(0.1 * BABY_SPEED.get());
-                playerHealth.setBaseValue(BABY_HEATLH.get());
+                playerHealth.setBaseValue(BABY_HEALTH.get());
             } else if (ageState == 2) {
                 if (serverPlayer.getVehicle() instanceof BabySittingEntity) {
                     serverPlayer.getVehicle().discard();
                 }
                 playerSpeed.setBaseValue(0.1 * TODDLER_SPEED.get());
-                playerHealth.setBaseValue(TODDLER_HEATLH.get());
+                playerHealth.setBaseValue(TODDLER_HEALTH.get());
             } else if (ageState == 3) {
                 playerSpeed.setBaseValue(0.1 * CHILD_SPEED.get());
-                playerHealth.setBaseValue(CHILD_HEATLH.get());
+                playerHealth.setBaseValue(CHILD_HEALTH.get());
             } else if (ageState == 4) {
                 playerSpeed.setBaseValue(0.1 * TEEN_SPEED.get());
-                playerHealth.setBaseValue(TEEN_HEATLH.get());
+                playerHealth.setBaseValue(TEEN_HEALTH.get());
             } else {
                 playerSpeed.setBaseValue(0.1 * ADULT_SPEED.get());
-                playerHealth.setBaseValue(ADULT_HEATLH.get());
+                playerHealth.setBaseValue(ADULT_HEALTH.get());
             }
         }
     }

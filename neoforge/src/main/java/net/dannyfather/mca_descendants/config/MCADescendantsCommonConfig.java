@@ -23,11 +23,15 @@ public class MCADescendantsCommonConfig {
     public static final ModConfigSpec.ConfigValue<Float> ADULT_SPEED;
 
     //health modifiers
-    public static final ModConfigSpec.ConfigValue<Integer> BABY_HEATLH;
-    public static final ModConfigSpec.ConfigValue<Integer> TODDLER_HEATLH;
-    public static final ModConfigSpec.ConfigValue<Integer> CHILD_HEATLH;
-    public static final ModConfigSpec.ConfigValue<Integer> TEEN_HEATLH;
-    public static final ModConfigSpec.ConfigValue<Integer> ADULT_HEATLH;
+    public static final ModConfigSpec.ConfigValue<Integer> BABY_HEALTH;
+    public static final ModConfigSpec.ConfigValue<Integer> TODDLER_HEALTH;
+    public static final ModConfigSpec.ConfigValue<Integer> CHILD_HEALTH;
+    public static final ModConfigSpec.ConfigValue<Integer> TEEN_HEALTH;
+    public static final ModConfigSpec.ConfigValue<Integer> ADULT_HEALTH;
+
+    //Respawn Without Descendant
+    public static final ModConfigSpec.ConfigValue<Boolean> RESPAWN_RANDOM;
+    public static final ModConfigSpec.ConfigValue<Float> TEEN_SPAWN_PERCENTAGE;
 
 
     //compatibility
@@ -48,20 +52,23 @@ public class MCADescendantsCommonConfig {
         PLAYER_GROWTH = BUILDER.define("Player Growth", true);
 
         //speed
-        BABY_SPEED = BUILDER.comment("Adjust speed modifiers of each age state").define("Baby Movement Speed",0.05f);
+        BABY_SPEED = BUILDER.comment("Adjust speed modifiers of each age state").define("Baby Movement Speed",0.0f);
         TODDLER_SPEED = BUILDER.define("Toddler Movement Speed", 0.2f);
         CHILD_SPEED = BUILDER.define("Child Movement Speed", 0.9f);
         TEEN_SPEED = BUILDER.define("Teen Movement Speed", 1.2f);
         ADULT_SPEED = BUILDER.define("Adult Movement Speed", 1f);
 
         //heath bars
-        BABY_HEATLH = BUILDER.comment("Adjust heath modifiers (amount of half-hearts) of each age state").define("Baby health",4);
-        TODDLER_HEATLH = BUILDER.define("Toddler health", 6);
-        CHILD_HEATLH = BUILDER.define("Child health", 10);
-        TEEN_HEATLH = BUILDER.define("Teen health", 16);
-        ADULT_HEATLH = BUILDER.define("Adult health", 20);
+        BABY_HEALTH = BUILDER.comment("Adjust heath modifiers (amount of half-hearts) of each age state").define("Baby health",4);
+        TODDLER_HEALTH = BUILDER.define("Toddler health", 6);
+        CHILD_HEALTH = BUILDER.define("Child health", 10);
+        TEEN_HEALTH = BUILDER.define("Teen health", 16);
+        ADULT_HEALTH = BUILDER.define("Adult health", 20);
 
 
+        //Randomised Spawn
+        RESPAWN_RANDOM = BUILDER.comment("Setting this to true enables you to redo villager creation, feature for survival/creative only").define("Enable Respawn Without Descendants",true);
+        TEEN_SPAWN_PERCENTAGE = BUILDER.comment("If respawning as a random villager, percentage chance you respawn as a teenager").define("Teenager Chance",10.0f);
 
         //mod compat
         if(ModList.get().isLoaded("pmmo")) {

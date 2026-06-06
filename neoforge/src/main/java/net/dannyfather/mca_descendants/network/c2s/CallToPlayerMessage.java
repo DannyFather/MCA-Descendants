@@ -28,6 +28,7 @@ import net.minecraft.world.entity.RelativeMovement;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.portal.DimensionTransition;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.LogicalSide;
@@ -38,15 +39,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import static net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig.*;
-import static net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig.ADULT_HEATLH;
-import static net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig.ADULT_SPEED;
-import static net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig.BABY_HEATLH;
-import static net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig.CHILD_HEATLH;
-import static net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig.CHILD_SPEED;
-import static net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig.TEEN_HEATLH;
-import static net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig.TEEN_SPEED;
-import static net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig.TODDLER_HEATLH;
-import static net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig.TODDLER_SPEED;
 
 public record CallToPlayerMessage(UUID uuid) implements HandleablePayload {
     public static final CustomPacketPayload.Type<CallToPlayerMessage> TYPE = new CustomPacketPayload.Type<>(MCADescendants.locate("call_to_player"));
@@ -117,6 +109,7 @@ public record CallToPlayerMessage(UUID uuid) implements HandleablePayload {
                     data.setXpMap(player.getUUID(), new HashMap<>());
                     Networking.sendToClient(new CP_SyncData_ClearXp(""), player);
                 }
+
 
                 player.getServer().getAllLevels().forEach(level -> {
                     DescendantLocationData data = DescendantLocationData.get(level);
