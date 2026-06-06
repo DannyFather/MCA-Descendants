@@ -1,6 +1,7 @@
 package net.dannyfather.mca_descendants.client;
 
 import net.dannyfather.mca_descendants.MCADescendants;
+import net.dannyfather.mca_descendants.client.gui.PhoneOptionsScreen;
 import net.dannyfather.mca_descendants.client.gui.PhoneScreen;
 import net.dannyfather.mca_descendants.network.s2c.OpenGuiRequest;
 import net.minecraft.client.Minecraft;
@@ -9,7 +10,11 @@ import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = MCADescendants.MODID,value = Dist.CLIENT)
 public class ClientHandler {
-    public static void openGui(OpenGuiRequest msg) {
+    public static void openPhoneGui(OpenGuiRequest msg) {
         Minecraft.getInstance().setScreen(new PhoneScreen(msg.villager));
+    }
+
+    public static void openPhoneOptionsGui(OpenGuiRequest msg) {
+        Minecraft.getInstance().setScreen(new PhoneOptionsScreen());
     }
 }

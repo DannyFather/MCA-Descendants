@@ -1,5 +1,6 @@
 package net.dannyfather.mca_descendants.network;
 
+import net.dannyfather.mca_descendants.client.gui.PhoneOptionsScreen;
 import net.dannyfather.mca_descendants.client.gui.PhoneScreen;
 import net.dannyfather.mca_descendants.network.s2c.OpenGuiRequest;
 import net.dannyfather.mca_descendants.network.s2c.getDescendantResponse;
@@ -21,6 +22,11 @@ public class ClientInteractionManagerImpl implements ClientInteractionManager {
                 case PHONE -> {
                     Minecraft.getInstance().setScreen(
                             new PhoneScreen(message.villager)
+                    );
+                }
+                case PHONEOPTIONS -> {
+                    Minecraft.getInstance().setScreen(
+                            new PhoneOptionsScreen()
                     );
                 }
             }

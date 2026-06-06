@@ -1,6 +1,7 @@
 package net.dannyfather.mca_descendants.worldgen.teleporters;
 
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraftforge.common.util.ITeleporter;
 
@@ -25,5 +26,10 @@ public class SimpleTeleporter implements ITeleporter {
         newEntity.teleportTo(x, y, z);
 
         return newEntity;
+    }
+
+    @Override
+    public boolean playTeleportSound(ServerPlayer player, ServerLevel sourceWorld, ServerLevel destWorld) {
+        return false;
     }
 }

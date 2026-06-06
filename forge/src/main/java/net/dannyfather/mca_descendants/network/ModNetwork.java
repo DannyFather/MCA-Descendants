@@ -2,6 +2,8 @@ package net.dannyfather.mca_descendants.network;
 
 import net.dannyfather.mca_descendants.MCADescendants;
 import net.dannyfather.mca_descendants.network.c2s.CallToPlayerMessage;
+import net.dannyfather.mca_descendants.network.c2s.RandomToPlayerMessage;
+import net.dannyfather.mca_descendants.network.c2s.SpectateWorldMessage;
 import net.dannyfather.mca_descendants.network.c2s.getDescendantsRequest;
 import net.dannyfather.mca_descendants.network.s2c.OpenGuiRequest;
 import net.dannyfather.mca_descendants.network.s2c.getDescendantResponse;
@@ -45,6 +47,16 @@ public class ModNetwork {
                 .encoder(OpenGuiRequest::encode)
                 .decoder(OpenGuiRequest::new)
                 .consumerMainThread(OpenGuiRequest::handle)
+                .add();
+        CHANNEL.messageBuilder(RandomToPlayerMessage.class, id++)
+                .encoder(RandomToPlayerMessage::encode)
+                .decoder(RandomToPlayerMessage::new)
+                .consumerMainThread(RandomToPlayerMessage::handle)
+                .add();
+        CHANNEL.messageBuilder(SpectateWorldMessage.class, id++)
+                .encoder(SpectateWorldMessage::encode)
+                .decoder(SpectateWorldMessage::new)
+                .consumerMainThread(SpectateWorldMessage::handle)
                 .add();
     }
 

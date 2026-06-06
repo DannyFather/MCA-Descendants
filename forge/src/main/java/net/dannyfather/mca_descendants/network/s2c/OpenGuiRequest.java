@@ -1,5 +1,6 @@
 package net.dannyfather.mca_descendants.network.s2c;
 
+import net.dannyfather.mca_descendants.client.ClientHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -32,7 +33,10 @@ public class OpenGuiRequest {
             net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(
                     net.minecraftforge.api.distmarker.Dist.CLIENT,
                     () -> () -> {
-                        net.dannyfather.mca_descendants.client.ClientHandler.openGui(this);
+                        switch (getGui()) {
+                            case PHONE -> ClientHandler.openPhoneGui(this);
+                            case PHONEOPTIONS -> ClientHandler.openPhoneOptionsGui(this);
+                        }
                     }
             );
         });
@@ -46,6 +50,7 @@ public class OpenGuiRequest {
     }
 
     public enum Type {
-        PHONE
+        PHONE,
+        PHONEOPTIONS
     }
 }

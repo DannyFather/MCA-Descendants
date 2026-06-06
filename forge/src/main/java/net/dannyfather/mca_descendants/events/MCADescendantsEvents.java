@@ -109,7 +109,6 @@ public class MCADescendantsEvents {
                         LAST_DEATH_MESSAGE.put(player.getUUID(), deathMsg);
                         String villagerName = PlayerSaveData.get(player).getEntityData().getString("villagerName");
                         LAST_VILLAGER_NAME.put(player.getUUID(), villagerName);
-                        player.setGameMode(GameType.SPECTATOR);
                         if(!PlayerSaveData.get(player).getEntityData().getString("villagerName").equals("Soul")) {
                             Entity soul = ModUtils.summonSoul(player, serverLevel);
                             soul.moveTo(player.blockPosition(), player.getYRot(), player.getXRot());
@@ -223,6 +222,7 @@ public class MCADescendantsEvents {
                 boolean isDeath = !event.isEndConquered();
 
                 if (isDeath) {
+                    serverPlayer.setGameMode(GameType.SPECTATOR);
                     RESPAWN_TICKS.put(serverPlayer.getUUID(),80);
                 }
             }
@@ -268,7 +268,7 @@ public class MCADescendantsEvents {
                 }
             }
             if(entity instanceof ServerPlayer serverPlayer) {
-                if(MCADescendantsCommonConfig.INSTANT_RESPAWN.get()) {
+                if(MCADescendantsCommonConfig.INSTANT_RESPAWN.get() && !ModList.get().isLoaded("sync")/* &&(serverLevel.getLevelData().isHardcore() || !MCADescendantsCommonConfig.HARDCORE_ONLY.get())*/) {
                     serverLevel.getGameRules().getRule(GameRules.RULE_DO_IMMEDIATE_RESPAWN).set(true,serverPlayer.server);
                 }
                 FamilyTreeNode playerNode = tree.getOrCreate(serverPlayer);

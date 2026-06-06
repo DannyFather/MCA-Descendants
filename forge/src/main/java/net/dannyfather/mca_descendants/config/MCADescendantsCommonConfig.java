@@ -28,6 +28,11 @@ public class MCADescendantsCommonConfig {
     public static final ForgeConfigSpec.ConfigValue<Integer> TEEN_HEALTH;
     public static final ForgeConfigSpec.ConfigValue<Integer> ADULT_HEALTH;
 
+    //Respawn Without Descendant
+
+    public static final ForgeConfigSpec.ConfigValue<Boolean> RESPAWN_RANDOM;
+    public static final ForgeConfigSpec.ConfigValue<Float> TEEN_SPAWN_PERCENTAGE;
+
 
     //compatibility
     public static ForgeConfigSpec.ConfigValue<Boolean> RESET_PMMO_STATS;
@@ -61,6 +66,9 @@ public class MCADescendantsCommonConfig {
         ADULT_HEALTH = BUILDER.define("Adult health", 20);
 
 
+        //Randomised Spawn
+        RESPAWN_RANDOM = BUILDER.comment("Setting this to true enables you to redo villager creation, feature for survival/creative only").define("Enable Respawn Without Descendants",true);
+        TEEN_SPAWN_PERCENTAGE = BUILDER.comment("If respawning as a random villager, percentage chance you respawn as a teenager").define("Teenager Chance",10.0f);
 
         //mod compat
         if(ModList.get().isLoaded("pmmo")) {
