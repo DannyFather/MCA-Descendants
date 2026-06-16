@@ -10,17 +10,19 @@ public class MCADescendantsCommonConfig {
 
     public static final ModConfigSpec.ConfigValue<Boolean> HARDCORE_ONLY;
     public static final ModConfigSpec.ConfigValue<Boolean> PLAY_AS_SIBLINGS;
+    public static final ModConfigSpec.ConfigValue<Boolean> PLAY_AS_EXTENDED_FAMILY;
+    public static final ModConfigSpec.ConfigValue<Boolean> PLAY_AS_REVIVED;
     public static final ModConfigSpec.ConfigValue<Boolean> INSTANT_RESPAWN;
     public static final ModConfigSpec.ConfigValue<Boolean> ADULTS_ONLY;
     public static final ModConfigSpec.ConfigValue<Boolean> INSTANT_GROWTH;
     public static final ModConfigSpec.ConfigValue<Boolean> PLAYER_GROWTH;
 
     //speed modifiers
-    public static final ModConfigSpec.ConfigValue<Float> BABY_SPEED;
-    public static final ModConfigSpec.ConfigValue<Float> TODDLER_SPEED;
-    public static final ModConfigSpec.ConfigValue<Float> CHILD_SPEED;
-    public static final ModConfigSpec.ConfigValue<Float> TEEN_SPEED;
-    public static final ModConfigSpec.ConfigValue<Float> ADULT_SPEED;
+    public static final ModConfigSpec.ConfigValue<Double> BABY_SPEED;
+    public static final ModConfigSpec.ConfigValue<Double> TODDLER_SPEED;
+    public static final ModConfigSpec.ConfigValue<Double> CHILD_SPEED;
+    public static final ModConfigSpec.ConfigValue<Double> TEEN_SPEED;
+    public static final ModConfigSpec.ConfigValue<Double> ADULT_SPEED;
 
     //health modifiers
     public static final ModConfigSpec.ConfigValue<Integer> BABY_HEALTH;
@@ -31,7 +33,7 @@ public class MCADescendantsCommonConfig {
 
     //Respawn Without Descendant
     public static final ModConfigSpec.ConfigValue<Boolean> RESPAWN_RANDOM;
-    public static final ModConfigSpec.ConfigValue<Float> TEEN_SPAWN_PERCENTAGE;
+    public static final ModConfigSpec.ConfigValue<Double> TEEN_SPAWN_PERCENTAGE;
 
 
     //compatibility
@@ -45,6 +47,8 @@ public class MCADescendantsCommonConfig {
                 .define("Hardcore Only", true);
 
         PLAY_AS_SIBLINGS = BUILDER.define("Play as Siblings",true);
+        PLAY_AS_EXTENDED_FAMILY = BUILDER.define("Play as Additional Family Members",false);
+        PLAY_AS_REVIVED = BUILDER.define("Play as Previous Villagers If Revived",true);
         INSTANT_RESPAWN = BUILDER.define("Instant Respawn", true);
 
         ADULTS_ONLY = BUILDER.comment("Only be able to spawn as fully grown offspring").define("Adults Only",false);
@@ -52,11 +56,11 @@ public class MCADescendantsCommonConfig {
         PLAYER_GROWTH = BUILDER.define("Player Growth", true);
 
         //speed
-        BABY_SPEED = BUILDER.comment("Adjust speed modifiers of each age state").define("Baby Movement Speed",0.0f);
-        TODDLER_SPEED = BUILDER.define("Toddler Movement Speed", 0.2f);
-        CHILD_SPEED = BUILDER.define("Child Movement Speed", 0.9f);
-        TEEN_SPEED = BUILDER.define("Teen Movement Speed", 1.2f);
-        ADULT_SPEED = BUILDER.define("Adult Movement Speed", 1f);
+        BABY_SPEED = BUILDER.comment("Adjust speed modifiers of each age state").define("Baby Movement Speed",0.0);
+        TODDLER_SPEED = BUILDER.define("Toddler Movement Speed", 0.2);
+        CHILD_SPEED = BUILDER.define("Child Movement Speed", 0.9);
+        TEEN_SPEED = BUILDER.define("Teen Movement Speed", 1.2);
+        ADULT_SPEED = BUILDER.define("Adult Movement Speed", 1.0);
 
         //heath bars
         BABY_HEALTH = BUILDER.comment("Adjust heath modifiers (amount of half-hearts) of each age state").define("Baby health",4);
@@ -68,7 +72,7 @@ public class MCADescendantsCommonConfig {
 
         //Randomised Spawn
         RESPAWN_RANDOM = BUILDER.comment("Setting this to true enables you to redo villager creation, feature for survival/creative only").define("Enable Respawn Without Descendants",true);
-        TEEN_SPAWN_PERCENTAGE = BUILDER.comment("If respawning as a random villager, percentage chance you respawn as a teenager").define("Teenager Chance",10.0f);
+        TEEN_SPAWN_PERCENTAGE = BUILDER.comment("If respawning as a random villager, percentage chance you respawn as a teenager").define("Teenager Chance",10.0);
 
         //mod compat
         if(ModList.get().isLoaded("pmmo")) {

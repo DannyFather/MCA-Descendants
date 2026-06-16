@@ -62,6 +62,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.*;
 
+import static com.mojang.text2speech.Narrator.LOGGER;
 import static net.dannyfather.mca_descendants.network.c2s.getDescendantsRequest.getGrandchildren;
 import static net.dannyfather.mca_descendants.network.c2s.getDescendantsRequest.getValidRespawnCandidates;
 import static net.dannyfather.mca_descendants.util.ModUtils.respawnAfterlife;
@@ -97,7 +98,7 @@ public class MCADescendantsEvents {
                         LAST_VILLAGER_NAME.put(player.getUUID(), villagerName);
                         player.setRespawnPosition(player.level().dimension(),player.blockPosition(),0F,true,false);
                         if(player.hasCustomName()) {
-                            if(!player.getCustomName().getString().equals("e")){
+                            if(!player.getCustomName().getString().equals("\uD83D\uDC7B")){
                                 Entity soul = ModUtils.summonSoul(player, serverLevel);
                                 soul.moveTo(player.blockPosition(), player.getYRot(), player.getXRot());
                                 serverLevel.addFreshEntity(soul);
@@ -250,6 +251,10 @@ public class MCADescendantsEvents {
         ResourceKey afterLife = ResourceKey.create(Registries.DIMENSION, ResourceLocation.fromNamespaceAndPath(MCADescendants.MOD_ID, "afterlife"));
 
         if(entity.level() instanceof ServerLevel serverLevel) {
+            if(entity instanceof VillagerEntityMCA villager && villager.getCustomName().getString().equals("\uD83D\uDC7B")){
+                entity.remove(Entity.RemovalReason.DISCARDED);
+            }
+
             Scoreboard scoreboard = serverLevel.getScoreboard();
             Team ghostTeam = scoreboard.getPlayerTeam("ghosts");
             DescendantLocationData data = DescendantLocationData.get(serverLevel);
@@ -268,6 +273,7 @@ public class MCADescendantsEvents {
             if(entity instanceof LivingEntity livingEntity && livingEntity.isAlive()){
                 if(entity.getTeam() == ghostTeam){
                     livingEntity.addEffect(new MobEffectInstance(ModEffects.SPIRIT,-1,0,false,false));
+
                 } else {
                     if(livingEntity.hasEffect(ModEffects.SPIRIT)){
                         livingEntity.removeEffect(ModEffects.SPIRIT);

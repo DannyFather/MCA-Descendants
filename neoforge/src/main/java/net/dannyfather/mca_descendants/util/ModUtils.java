@@ -16,8 +16,10 @@ import net.conczin.mca.server.world.data.FamilyTree;
 import net.conczin.mca.server.world.data.FamilyTreeNode;
 import net.conczin.mca.server.world.data.PlayerSaveData;
 import net.dannyfather.mca_descendants.MCADescendants;
+import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.effects.ModEffects;
 import net.dannyfather.mca_descendants.server.world.StructureSpawnData;
+import net.dannyfather.mca_descendants.server.world.data.DescendantLocationData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ReceivingLevelScreen;
 import net.minecraft.core.BlockPos;
@@ -208,6 +210,10 @@ public class ModUtils {
                 entity.moveTo(playerPos);
                 pPlayer.teleportTo(targetPos.x,targetPos.y,targetPos.z);
                 entity.setCustomName(Component.literal(playerName));
+                if(MCADescendantsCommonConfig.PLAY_AS_REVIVED.get()) {
+                    DescendantLocationData data = DescendantLocationData.get(pPlayer.serverLevel());
+                    data.update(entity, pPlayer.getUUID());
+                }
                 if(entity instanceof LivingEntity livingEntity){
                     livingEntity.hurt(source,target.getMaxHealth() + 500f);
                 }
