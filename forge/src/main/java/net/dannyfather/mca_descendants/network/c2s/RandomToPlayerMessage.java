@@ -1,11 +1,14 @@
 package net.dannyfather.mca_descendants.network.c2s;
 
+import forge.net.mca.cobalt.network.NetworkHandler;
 import forge.net.mca.entity.EntitiesMCA;
 import forge.net.mca.entity.VillagerEntityMCA;
 import forge.net.mca.entity.VillagerLike;
 import forge.net.mca.entity.ai.relationship.AgeState;
 import forge.net.mca.entity.ai.relationship.Gender;
+import forge.net.mca.network.s2c.PlayerDataMessage;
 import forge.net.mca.server.ServerInteractionManager;
+import forge.net.mca.server.world.data.PlayerSaveData;
 import harmonised.pmmo.core.Core;
 import harmonised.pmmo.core.IDataStorage;
 import harmonised.pmmo.network.Networking;
@@ -17,6 +20,7 @@ import net.dannyfather.mca_descendants.worldgen.teleporters.SimpleTeleporter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -86,10 +90,19 @@ public class RandomToPlayerMessage {
                 randomVillager.getGenetics().randomize();
                 randomVillager.randomizeClothes();
                 randomVillager.randomizeHair();
-
                 randomVillager.moveTo(player.blockPosition().getCenter());
-                serverLevel.addFreshEntity(randomVillager);
-                ModUtils.goodSwapVillagerAndPlayer(randomVillager,player);
+                Component rVName = randomVillager.getCustomName();
+                CompoundTag rVTag = new CompoundTag();
+                randomVillager.save(rVTag);
+                serverLevel.players().forEach(p ->
+                        NetworkHandler.sendToPlayer(
+                                new PlayerDataMessage(player.getUUID(), rVTag),
+                                p
+                        )
+                );
+                PlayerSaveData.get(player).setEntityData(rVTag);
+                player.setCustomName(rVName);
+                player.setGameMode(server.getDefaultGameType());
                 ServerInteractionManager.launchDestiny(player);
             }
 

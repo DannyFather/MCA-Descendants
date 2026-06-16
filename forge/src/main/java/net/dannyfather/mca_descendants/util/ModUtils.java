@@ -12,6 +12,8 @@ import forge.net.mca.network.s2c.PlayerDataMessage;
 import forge.net.mca.server.world.data.FamilyTree;
 import forge.net.mca.server.world.data.FamilyTreeNode;
 import forge.net.mca.server.world.data.PlayerSaveData;
+import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
+import net.dannyfather.mca_descendants.server.world.data.DescendantLocationData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -192,6 +194,10 @@ public class ModUtils {
             if (entity != null) {
                 entity.moveTo(playerPos);
                 pPlayer.teleportTo(targetPos.x,targetPos.y,targetPos.z);
+                if(MCADescendantsCommonConfig.PLAY_AS_REVIVED.get()) {
+                    DescendantLocationData data = DescendantLocationData.get(pPlayer.serverLevel());
+                    data.update(entity, pPlayer.getUUID());
+                }
                 if(entity instanceof LivingEntity livingEntity){
                     livingEntity.hurt(source, livingEntity.getMaxHealth() + 500f);
                 }

@@ -51,9 +51,16 @@ public class getDescendantsRequest {
 
     public static Set<UUID> getValidRespawnCandidates(FamilyTreeNode node, ServerLevel serverLevel){
         Set<UUID> dSet = new HashSet<>();
-        dSet.addAll(getGrandchildren(node,serverLevel));
-        if(MCADescendantsCommonConfig.PLAY_AS_SIBLINGS.get()) {
-            dSet.addAll(node.siblings());
+        if(MCADescendantsCommonConfig.PLAY_AS_REVIVED.get()){
+           dSet.add(node.id());
+        }
+        if(!MCADescendantsCommonConfig.PLAY_AS_EXTENDED_FAMILY.get()) {
+            dSet.addAll(getGrandchildren(node, serverLevel));
+            if (MCADescendantsCommonConfig.PLAY_AS_SIBLINGS.get()) {
+                dSet.addAll(node.siblings());
+            }
+        } else{
+            node.getAllRelatives(5).forEach(dSet::add);
         }
         return dSet;
     }

@@ -9,6 +9,8 @@ public class MCADescendantsCommonConfig {
 
     public static final ForgeConfigSpec.ConfigValue<Boolean> HARDCORE_ONLY;
     public static final ForgeConfigSpec.ConfigValue<Boolean> PLAY_AS_SIBLINGS;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> PLAY_AS_EXTENDED_FAMILY;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> PLAY_AS_REVIVED;
     public static final ForgeConfigSpec.ConfigValue<Boolean> INSTANT_RESPAWN;
     public static final ForgeConfigSpec.ConfigValue<Boolean> ADULTS_ONLY;
     public static final ForgeConfigSpec.ConfigValue<Boolean> INSTANT_GROWTH;
@@ -35,7 +37,7 @@ public class MCADescendantsCommonConfig {
 
 
     //compatibility
-    public static ForgeConfigSpec.ConfigValue<Boolean> RESET_PMMO_STATS;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> RESET_PMMO_STATS;
 
 
     static {
@@ -45,6 +47,8 @@ public class MCADescendantsCommonConfig {
                 .define("Hardcore Only", true);
 
         PLAY_AS_SIBLINGS = BUILDER.define("Play as Siblings",true);
+        PLAY_AS_EXTENDED_FAMILY = BUILDER.define("Play as Additional Family Members",false);
+        PLAY_AS_REVIVED = BUILDER.define("Play as Previous Villagers If Revived",true);
         INSTANT_RESPAWN = BUILDER.define("Instant Respawn", true);
 
         ADULTS_ONLY = BUILDER.comment("Only be able to spawn as fully grown offspring").define("Adults Only",false);
@@ -71,9 +75,7 @@ public class MCADescendantsCommonConfig {
         TEEN_SPAWN_PERCENTAGE = BUILDER.comment("If respawning as a random villager, percentage chance you respawn as a teenager").define("Teenager Chance",10.0f);
 
         //mod compat
-        if(ModList.get().isLoaded("pmmo")) {
-            RESET_PMMO_STATS = BUILDER.define("Reset Project MMO Stats",true);
-        }
+        RESET_PMMO_STATS = BUILDER.define("Reset Project MMO Stats",true);
 
         BUILDER.pop();
         SPEC = BUILDER.build();
