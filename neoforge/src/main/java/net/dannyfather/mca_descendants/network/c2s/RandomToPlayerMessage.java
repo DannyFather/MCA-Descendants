@@ -82,7 +82,7 @@ public class RandomToPlayerMessage implements HandleablePayload {
                 randomVillager.setAge(0);
             } else {
                 randomVillager.setAgeState(AgeState.TEEN);
-                randomVillager.setAge(RandomSource.create().nextInt(90000));
+                randomVillager.setAge(-RandomSource.create().nextInt(90000));
             }
 
             CompoundTag rvData = new CompoundTag();
@@ -100,6 +100,7 @@ public class RandomToPlayerMessage implements HandleablePayload {
 
             randomVillager.getTraits().removeTrait(ASEXUAL);
             randomVillager.getTraits().removeTrait(COLOR_BLIND);
+
             randomVillager.getTraits().randomize();
             randomVillager.getGenetics().randomize();
             randomVillager.randomizeClothes();
@@ -158,8 +159,6 @@ public class RandomToPlayerMessage implements HandleablePayload {
 
 
 
-        } else {
-            LOGGER.info("It's a VillagerEntityMCA");
         }
 
 

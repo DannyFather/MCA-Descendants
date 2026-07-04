@@ -9,6 +9,7 @@ public class MCADescendantsCommonConfig {
     public static final ModConfigSpec SPEC;
 
     public static final ModConfigSpec.ConfigValue<Boolean> HARDCORE_ONLY;
+    public static final ModConfigSpec.ConfigValue<Boolean> RESPAWN_IN_AFTERLIFE;
     public static final ModConfigSpec.ConfigValue<Boolean> PLAY_AS_SIBLINGS;
     public static final ModConfigSpec.ConfigValue<Boolean> PLAY_AS_EXTENDED_FAMILY;
     public static final ModConfigSpec.ConfigValue<Boolean> PLAY_AS_REVIVED;
@@ -45,6 +46,7 @@ public class MCADescendantsCommonConfig {
 
         HARDCORE_ONLY = BUILDER.comment("Configure Whether The Descendant Mechanic is Hardcore Only")
                 .define("Hardcore Only", true);
+        RESPAWN_IN_AFTERLIFE = BUILDER.define("Respawn in Afterlife Dimension",true);
 
         PLAY_AS_SIBLINGS = BUILDER.define("Play as Siblings",true);
         PLAY_AS_EXTENDED_FAMILY = BUILDER.define("Play as Additional Family Members",false);

@@ -4,8 +4,13 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.conczin.mca.entity.VillagerLike;
+import net.conczin.mca.entity.ai.relationship.AgeState;
+import net.conczin.mca.network.Network;
+import net.conczin.mca.network.s2c.PlayerDataMessage;
 import net.conczin.mca.server.world.data.FamilyTree;
+import net.conczin.mca.server.world.data.PlayerSaveData;
 import net.dannyfather.mca_descendants.network.ModNetwork;
 import net.dannyfather.mca_descendants.network.s2c.OpenGuiRequest;
 import net.dannyfather.mca_descendants.sound.ModSounds;
@@ -13,12 +18,17 @@ import net.dannyfather.mca_descendants.util.ModUtils;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.GameType;
 
+import java.util.Objects;
+
+import static net.dannyfather.mca_descendants.events.MCAGrowthEvents.updatePlayerAttributes;
 import static net.minecraft.ChatFormatting.*;
 
 public class AdminCommand {
@@ -32,7 +42,7 @@ public class AdminCommand {
                             serverPlayer
                     );
                     return 1;
-                }).requires((serverCommandSource) -> serverCommandSource.hasPermission(2)))
+                }).requires((serverCommandSource) -> Objects.requireNonNull(serverCommandSource.getPlayer()).gameMode.getGameModeForPlayer().equals(GameType.SPECTATOR)))
                 .then(Commands.literal("swapWithVillager")
                         .then(Commands.argument("villager", EntityArgument.entity()).executes(context -> {
                                             Entity vEntity = EntityArgument.getEntity(context, "villager");
@@ -84,10 +94,44 @@ public class AdminCommand {
                                                 }).requires((serverCommandSource) -> serverCommandSource.hasPermission(2))
                                         )
                         )
-                )
+                ).then(Commands.literal("setPlayerAgeState")
+                        .then(Commands.argument("Player", EntityArgument.player())
+                                .then(Commands.literal("Baby").executes(context -> {
+                                    ageStateCommand(context,1);
+                                    return 1;
+                                }))
+                                .then(Commands.literal("Toddler").executes(context -> {
+                                    ageStateCommand(context,2);
+                                    return 1;
+                                }))
+                                .then(Commands.literal("Child").executes(context -> {
+                                    ageStateCommand(context,3);
+                                    return 1;
+                                }))
+                                .then(Commands.literal("Teen").executes(context -> {
+                                    ageStateCommand(context,4);
+                                    return 1;
+                                }))
+                                .then(Commands.literal("Adult").executes(context -> {
+                                    ageStateCommand(context,5);
+                                    return 1;
+                                }))
+                        ).requires((serverCommandSource) -> serverCommandSource.hasPermission(2)))
                 .then(Commands.literal("help").executes(AdminCommand::displayHelp))
         );
     }
+
+    private static void ageStateCommand(CommandContext<CommandSourceStack> ctx, int aState) throws CommandSyntaxException {
+        ServerPlayer player = EntityArgument.getPlayer(ctx, "Player");
+        CompoundTag playerVData = PlayerSaveData.get(player).getEntityData();
+        int age = - ((5 - aState) * AgeState.getStageDuration());
+        playerVData.putInt("Age", age);
+        PlayerSaveData.get(player).setEntityData(playerVData);
+        player.serverLevel().players().forEach(p -> Network.sendToPlayer(new PlayerDataMessage(player.getUUID(), playerVData), p));
+
+        updatePlayerAttributes(player);
+    }
+
     private static int displayHelp(CommandContext<CommandSourceStack> ctx) {
         Entity player = ctx.getSource().getEntity();
         if (player == null) {

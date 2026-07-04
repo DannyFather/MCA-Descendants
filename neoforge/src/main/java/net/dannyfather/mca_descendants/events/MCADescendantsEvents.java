@@ -8,6 +8,8 @@ import net.conczin.mca.server.world.data.PlayerSaveData;
 import net.dannyfather.mca_descendants.MCADescendants;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.effects.ModEffects;
+import net.dannyfather.mca_descendants.network.ModNetwork;
+import net.dannyfather.mca_descendants.network.s2c.OpenGuiRequest;
 import net.dannyfather.mca_descendants.server.world.StructureSpawnData;
 import net.dannyfather.mca_descendants.server.world.data.DescendantLocationData;
 import net.dannyfather.mca_descendants.util.ModUtils;
@@ -45,6 +47,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.RedstoneSide;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.Team;
@@ -77,6 +80,8 @@ public class MCADescendantsEvents {
     public static final Map<UUID, Integer> GRANDCHILDREN_COUNT = new HashMap<>();
     public static final Map<UUID, Set<UUID>> DESCENDANTS = new HashMap<>();
     public static final Map<UUID, Integer> RESPAWN_TICKS = new HashMap<>();
+    public static final Map<UUID, Integer> LOADING_TICKS = new HashMap<>();
+
 
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
@@ -338,6 +343,7 @@ public class MCADescendantsEvents {
     public static void onServerTick(ServerTickEvent.Post event) {
 
         Iterator<Map.Entry<UUID, Integer>> it = RESPAWN_TICKS.entrySet().iterator();
+        Iterator<Map.Entry<UUID, Integer>> lIt = LOADING_TICKS.entrySet().iterator();
 
         while (it.hasNext()) {
             Map.Entry<UUID, Integer> entry = it.next();
@@ -348,26 +354,38 @@ public class MCADescendantsEvents {
                 ServerPlayer player = event.getServer().getPlayerList().getPlayer(entry.getKey());
                 ServerLevel serverLevel = player.serverLevel();
 
-                if (player != null) {
-                    MinecraftServer server = player.getServer();
+                if(MCADescendantsCommonConfig.RESPAWN_IN_AFTERLIFE.get()) {
+                    if (player != null) {
+                        MinecraftServer server = player.getServer();
 
-                    Scoreboard scoreboard = serverLevel.getScoreboard();
+                        Scoreboard scoreboard = serverLevel.getScoreboard();
 
-                    PlayerTeam ghostTeam = scoreboard.getPlayerTeam("ghosts");
-                    scoreboard.addPlayerToTeam(player.getName().getString(), ghostTeam);
-                    BlockPos spawnPos = new BlockPos(16, 301, 6);
-                    ResourceKey<Level> targetDimension = ResourceKey.create(Registries.DIMENSION, ResourceLocation.fromNamespaceAndPath(MCADescendants.MOD_ID, "afterlife"));
+                        PlayerTeam ghostTeam = scoreboard.getPlayerTeam("ghosts");
+                        scoreboard.addPlayerToTeam(player.getName().getString(), ghostTeam);
+                        BlockPos spawnPos = new BlockPos(16, 301, 6);
+                        ResourceKey<Level> targetDimension = ResourceKey.create(Registries.DIMENSION, ResourceLocation.fromNamespaceAndPath(MCADescendants.MOD_ID, "afterlife"));
 
-                    ServerLevel tpDim = server.getLevel(targetDimension);
-                    if (tpDim == null) return;
+                        ServerLevel tpDim = server.getLevel(targetDimension);
+                        if (tpDim == null) return;
 
-                    tpDim.getChunkAt(spawnPos);
-                    player.getServer().execute(
-                            () -> {
-                                respawnAfterlife(player, tpDim, spawnPos, server);
-                            });
+                        tpDim.getChunkAt(spawnPos);
+                        player.getServer().execute(
+                                () -> {
+                                    respawnAfterlife(player, tpDim, spawnPos, server);
+                                });
+                    }
+                } else {
+                    ModNetwork.sendToPlayer(
+                            new OpenGuiRequest(OpenGuiRequest.Type.PHONE),
+                            player
+                    );
+                    player.closeContainer();
+                    LOADING_TICKS.put(player.getUUID(),40);
+                    ModNetwork.sendToPlayer(
+                            new OpenGuiRequest(OpenGuiRequest.Type.PHONE),
+                            player
+                    );
                 }
-
                 it.remove();
             } else {
                 entry.setValue(time);
