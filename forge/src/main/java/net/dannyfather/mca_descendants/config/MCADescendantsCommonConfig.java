@@ -8,6 +8,7 @@ public class MCADescendantsCommonConfig {
     public static final ForgeConfigSpec SPEC;
 
     public static final ForgeConfigSpec.ConfigValue<Boolean> HARDCORE_ONLY;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> RESPAWN_IN_AFTERLIFE;
     public static final ForgeConfigSpec.ConfigValue<Boolean> PLAY_AS_SIBLINGS;
     public static final ForgeConfigSpec.ConfigValue<Boolean> PLAY_AS_EXTENDED_FAMILY;
     public static final ForgeConfigSpec.ConfigValue<Boolean> PLAY_AS_REVIVED;
@@ -17,11 +18,11 @@ public class MCADescendantsCommonConfig {
     public static final ForgeConfigSpec.ConfigValue<Boolean> PLAYER_GROWTH;
 
     //speed modifiers
-    public static final ForgeConfigSpec.ConfigValue<Float> BABY_SPEED;
-    public static final ForgeConfigSpec.ConfigValue<Float> TODDLER_SPEED;
-    public static final ForgeConfigSpec.ConfigValue<Float> CHILD_SPEED;
-    public static final ForgeConfigSpec.ConfigValue<Float> TEEN_SPEED;
-    public static final ForgeConfigSpec.ConfigValue<Float> ADULT_SPEED;
+    public static final ForgeConfigSpec.ConfigValue<Double> BABY_SPEED;
+    public static final ForgeConfigSpec.ConfigValue<Double> TODDLER_SPEED;
+    public static final ForgeConfigSpec.ConfigValue<Double> CHILD_SPEED;
+    public static final ForgeConfigSpec.ConfigValue<Double> TEEN_SPEED;
+    public static final ForgeConfigSpec.ConfigValue<Double> ADULT_SPEED;
 
     //health modifiers
     public static final ForgeConfigSpec.ConfigValue<Integer> BABY_HEALTH;
@@ -33,7 +34,7 @@ public class MCADescendantsCommonConfig {
     //Respawn Without Descendant
 
     public static final ForgeConfigSpec.ConfigValue<Boolean> RESPAWN_RANDOM;
-    public static final ForgeConfigSpec.ConfigValue<Float> TEEN_SPAWN_PERCENTAGE;
+    public static final ForgeConfigSpec.ConfigValue<Double> TEEN_SPAWN_PERCENTAGE;
 
 
     //compatibility
@@ -45,6 +46,7 @@ public class MCADescendantsCommonConfig {
 
         HARDCORE_ONLY = BUILDER.comment("Configure Whether The Descendant Mechanic is Hardcore Only")
                 .define("Hardcore Only", true);
+        RESPAWN_IN_AFTERLIFE = BUILDER.define("Respawn in Afterlife Dimension",true);
 
         PLAY_AS_SIBLINGS = BUILDER.define("Play as Siblings",true);
         PLAY_AS_EXTENDED_FAMILY = BUILDER.define("Play as Additional Family Members",false);
@@ -56,11 +58,11 @@ public class MCADescendantsCommonConfig {
         PLAYER_GROWTH = BUILDER.define("Player Growth", true);
 
         //speed
-        BABY_SPEED = BUILDER.comment("Adjust speed modifiers of each age state").define("Baby Movement Speed",0.0f);
-        TODDLER_SPEED = BUILDER.define("Toddler Movement Speed", 0.2f);
-        CHILD_SPEED = BUILDER.define("Child Movement Speed", 0.9f);
-        TEEN_SPEED = BUILDER.define("Teen Movement Speed", 1.2f);
-        ADULT_SPEED = BUILDER.define("Adult Movement Speed", 1f);
+        BABY_SPEED = BUILDER.comment("Adjust speed modifiers of each age state").define("Baby Movement Speed",0.0);
+        TODDLER_SPEED = BUILDER.define("Toddler Movement Speed", 0.2);
+        CHILD_SPEED = BUILDER.define("Child Movement Speed", 0.9);
+        TEEN_SPEED = BUILDER.define("Teen Movement Speed", 1.2);
+        ADULT_SPEED = BUILDER.define("Adult Movement Speed", 1.0);
 
         //heath bars
         BABY_HEALTH = BUILDER.comment("Adjust heath modifiers (amount of half-hearts) of each age state").define("Baby health",4);
@@ -72,7 +74,7 @@ public class MCADescendantsCommonConfig {
 
         //Randomised Spawn
         RESPAWN_RANDOM = BUILDER.comment("Setting this to true enables you to redo villager creation, feature for survival/creative only").define("Enable Respawn Without Descendants",true);
-        TEEN_SPAWN_PERCENTAGE = BUILDER.comment("If respawning as a random villager, percentage chance you respawn as a teenager").define("Teenager Chance",10.0f);
+        TEEN_SPAWN_PERCENTAGE = BUILDER.comment("If respawning as a random villager, percentage chance you respawn as a teenager").define("Teenager Chance",10.0);
 
         //mod compat
         RESET_PMMO_STATS = BUILDER.define("Reset Project MMO Stats",true);

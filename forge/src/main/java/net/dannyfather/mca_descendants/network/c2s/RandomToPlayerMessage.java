@@ -77,14 +77,14 @@ public class RandomToPlayerMessage {
                 }
                 VillagerEntityMCA randomVillager = new VillagerEntityMCA(entity,serverLevel,gender);
 
-                float adultChance = 1 - MCADescendantsCommonConfig.TEEN_SPAWN_PERCENTAGE.get() * 0.01f;
+                double adultChance = 1 - (MCADescendantsCommonConfig.TEEN_SPAWN_PERCENTAGE.get() * 0.01D);
                 boolean randomVar = RandomSource.create().nextFloat() < adultChance;
                 if(randomVar) {
                     randomVillager.setAgeState(AgeState.ADULT);
                     randomVillager.setAge(0);
                 } else {
                     randomVillager.setAgeState(AgeState.TEEN);
-                    randomVillager.setAge(RandomSource.create().nextInt(90000));
+                    randomVillager.setAge(- RandomSource.create().nextInt(90000));
                 }
                 randomVillager.getTraits().randomize();
                 randomVillager.getGenetics().randomize();

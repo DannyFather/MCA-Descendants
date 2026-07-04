@@ -10,10 +10,13 @@ import net.dannyfather.mca_descendants.block.custom.PhoneBlock;
 import net.dannyfather.mca_descendants.client.gui.PhoneScreen;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.effects.ModEffects;
+import net.dannyfather.mca_descendants.network.ModNetwork;
+import net.dannyfather.mca_descendants.network.s2c.OpenGuiRequest;
 import net.dannyfather.mca_descendants.server.world.data.DescendantLocationData;
 import net.dannyfather.mca_descendants.util.ModUtils;
 import net.dannyfather.mca_descendants.world.StructureSpawnData;
 import net.dannyfather.mca_descendants.worldgen.teleporters.SimpleTeleporter;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
@@ -51,6 +54,7 @@ import net.minecraft.world.level.block.state.properties.RedstoneSide;
 import net.minecraft.world.level.levelgen.structure.templatesystem.BlockIgnoreProcessor;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.Team;
@@ -71,6 +75,7 @@ import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.server.ServerLifecycleHooks;
 import org.apache.logging.log4j.core.jmx.Server;
 
@@ -92,6 +97,7 @@ public class MCADescendantsEvents {
     public static final Map<UUID, Integer> GRANDCHILDREN_COUNT = new HashMap<>();
     public static final Map<UUID, Set<UUID>> DESCENDANTS = new HashMap<>();
     private static final Map<UUID,Integer> RESPAWN_TICKS = new HashMap<>();
+    private static final Map<UUID,Integer> LOADING_TICKS = new HashMap<>();
 
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
@@ -223,7 +229,7 @@ public class MCADescendantsEvents {
 
                 if (isDeath) {
                     serverPlayer.setGameMode(GameType.SPECTATOR);
-                    RESPAWN_TICKS.put(serverPlayer.getUUID(),80);
+                    RESPAWN_TICKS.put(serverPlayer.getUUID(), 80);
                 }
             }
 
@@ -315,82 +321,104 @@ public class MCADescendantsEvents {
     @SubscribeEvent
     public static void onServerTick(TickEvent.ServerTickEvent event) {
         Iterator<Map.Entry<UUID, Integer>> it = RESPAWN_TICKS.entrySet().iterator();
+        Iterator<Map.Entry<UUID, Integer>> lIt = LOADING_TICKS.entrySet().iterator();
 
         while (it.hasNext()) {
             Map.Entry<UUID,Integer> entry = it.next();
 
-            int time = entry.getValue() -1;
+            int time = entry.getValue() - 1;
 
             if (time <= 0) {
                 ServerPlayer player = event.getServer().getPlayerList().getPlayer(entry.getKey());
                 ServerLevel serverLevel = player.serverLevel();
 
+                if(MCADescendantsCommonConfig.RESPAWN_IN_AFTERLIFE.get()) {
+                    String soulName = LAST_VILLAGER_NAME.get(player.getUUID());
+                    FamilyTree tree = FamilyTree.get(serverLevel);
 
-                String soulName = LAST_VILLAGER_NAME.get(player.getUUID());
-                FamilyTree tree = FamilyTree.get(serverLevel);
+                    Scoreboard scoreboard = serverLevel.getScoreboard();
 
-                Scoreboard scoreboard = serverLevel.getScoreboard();
+                    PlayerTeam ghostTeam = scoreboard.getPlayerTeam("ghosts");
+                    scoreboard.addPlayerToTeam(player.getName().getString(), ghostTeam);
 
-                PlayerTeam ghostTeam = scoreboard.getPlayerTeam("ghosts");
-                scoreboard.addPlayerToTeam(player.getName().getString(), ghostTeam);
-
-                ResourceKey<Level> targetDimension = ResourceKey.create(Registries.DIMENSION, new ResourceLocation(MCADescendants.MODID, "afterlife"));
-                ServerLevel tpDim = player.server.getLevel(targetDimension);
-                BlockPos spawnPos = new BlockPos(16, 302, 6);
-                assert tpDim != null;
-                tpDim.setChunkForced(spawnPos.getX() >> 4, spawnPos.getZ() >> 4, true);
-                player.changeDimension(tpDim, new SimpleTeleporter(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ()));
-                player.setGameMode(GameType.ADVENTURE);
-                ResourceLocation structureId = new ResourceLocation(MCADescendants.MODID, "waiting_room");
-                StructureTemplate template = serverLevel.getStructureManager().get(structureId).orElse(null);
-                StructureSpawnData structureSpawnData = StructureSpawnData.get(serverLevel);
-                if (!structureSpawnData.hasSpawned()) {
-                    if (template != null) {
-                        BlockPos pos = new BlockPos(0, 299, 0);
-
-                        StructurePlaceSettings settings = new StructurePlaceSettings()
-                                .setRotation(Rotation.NONE)
-                                .setMirror(Mirror.NONE)
-                                .addProcessor(BlockIgnoreProcessor.AIR)
-                                .setIgnoreEntities(false);
-
-                        template.placeInWorld(
-                                tpDim,
-                                pos,
-                                pos,
-                                settings,
-                                tpDim.getRandom(),
-                                2 // flags (2 = update neighbors)
-                        );
-
-                        structureSpawnData.setSpawned();
-                    }
-                }
-                BlockPos lecternPos = new BlockPos(10, 303, 21);
-                BlockPos phonePos = new BlockPos(7, 304, 20);
-                BlockPos wallPos = new BlockPos(7, 304, 21);
-                BlockPos leverPos = new BlockPos(7, 304, 22);
-                BlockState phoneState = tpDim.getBlockState(phonePos);
-                BlockState wallState = tpDim.getBlockState(phonePos);
-                BlockState leverState = tpDim.getBlockState(phonePos);
-                ModUtils.placeBookOnLectern(tpDim, lecternPos, soulName, CHILDREN_COUNT.get(player.getUUID()), GRANDCHILDREN_COUNT.get(player.getUUID()), player);
-                tpDim.setBlock(wallPos, Blocks.GRAY_TERRACOTTA.defaultBlockState(), 3);
-                tpDim.setBlock(leverPos, Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.NORTH, RedstoneSide.SIDE), 3);
-                tpDim.updateNeighborsAt(leverPos, leverState.getBlock());
-                tpDim.updateNeighborsAt(wallPos, wallState.getBlock());
-                tpDim.updateNeighborsAt(phonePos, phoneState.getBlock());
-                //if forge were a person i'd slit their fucking throat zero hesitation.
-                player.server.execute(() -> {
+                    ResourceKey<Level> targetDimension = ResourceKey.create(Registries.DIMENSION, new ResourceLocation(MCADescendants.MODID, "afterlife"));
+                    ServerLevel tpDim = player.server.getLevel(targetDimension);
+                    BlockPos spawnPos = new BlockPos(16, 302, 6);
+                    assert tpDim != null;
+                    tpDim.setChunkForced(spawnPos.getX() >> 4, spawnPos.getZ() >> 4, true);
                     player.changeDimension(tpDim, new SimpleTeleporter(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ()));
+                    player.setGameMode(GameType.ADVENTURE);
+                    ResourceLocation structureId = new ResourceLocation(MCADescendants.MODID, "waiting_room");
+                    StructureTemplate template = serverLevel.getStructureManager().get(structureId).orElse(null);
+                    StructureSpawnData structureSpawnData = StructureSpawnData.get(serverLevel);
+                    if (!structureSpawnData.hasSpawned()) {
+                        if (template != null) {
+                            BlockPos pos = new BlockPos(0, 299, 0);
 
-                });
+                            StructurePlaceSettings settings = new StructurePlaceSettings()
+                                    .setRotation(Rotation.NONE)
+                                    .setMirror(Mirror.NONE)
+                                    .addProcessor(BlockIgnoreProcessor.AIR)
+                                    .setIgnoreEntities(false);
 
+                            template.placeInWorld(
+                                    tpDim,
+                                    pos,
+                                    pos,
+                                    settings,
+                                    tpDim.getRandom(),
+                                    2 // flags (2 = update neighbors)
+                            );
+
+                            structureSpawnData.setSpawned();
+                        }
+                    }
+                    BlockPos lecternPos = new BlockPos(10, 303, 21);
+                    BlockPos phonePos = new BlockPos(7, 304, 20);
+                    BlockPos wallPos = new BlockPos(7, 304, 21);
+                    BlockPos leverPos = new BlockPos(7, 304, 22);
+                    BlockState phoneState = tpDim.getBlockState(phonePos);
+                    BlockState wallState = tpDim.getBlockState(phonePos);
+                    BlockState leverState = tpDim.getBlockState(phonePos);
+                    ModUtils.placeBookOnLectern(tpDim, lecternPos, soulName, CHILDREN_COUNT.get(player.getUUID()), GRANDCHILDREN_COUNT.get(player.getUUID()), player);
+                    tpDim.setBlock(wallPos, Blocks.GRAY_TERRACOTTA.defaultBlockState(), 3);
+                    tpDim.setBlock(leverPos, Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.NORTH, RedstoneSide.SIDE), 3);
+                    tpDim.updateNeighborsAt(leverPos, leverState.getBlock());
+                    tpDim.updateNeighborsAt(wallPos, wallState.getBlock());
+                    tpDim.updateNeighborsAt(phonePos, phoneState.getBlock());
+                    player.server.execute(() -> {
+                        player.changeDimension(tpDim, new SimpleTeleporter(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ()));
+
+                    });
+                } else {
+                    ModNetwork.CHANNEL.send(
+                            PacketDistributor.PLAYER.with(() -> player),
+                            new OpenGuiRequest(OpenGuiRequest.Type.PHONE, 0)
+                    );
+                    player.closeContainer();
+                    LOADING_TICKS.put(player.getUUID(),40);
+                }
                 it.remove();
             } else {
                 entry.setValue(time);
             }
 
 
+        }
+
+        while(lIt.hasNext()) {
+            Map.Entry<UUID,Integer> entry = lIt.next();
+            int time = entry.getValue() - 1;
+            if(time <= 0) {
+                ServerPlayer player = event.getServer().getPlayerList().getPlayer(entry.getKey());
+                ModNetwork.CHANNEL.send(
+                        PacketDistributor.PLAYER.with(() -> player),
+                        new OpenGuiRequest(OpenGuiRequest.Type.PHONE, 0)
+                );
+                lIt.remove();
+            } else {
+                entry.setValue(time);
+            }
         }
     }
 

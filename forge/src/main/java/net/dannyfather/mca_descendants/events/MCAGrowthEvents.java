@@ -45,7 +45,7 @@ public class MCAGrowthEvents {
 
                         int age = playerVData.getInt("Age");
                         if (age % AgeState.getStageDuration() == 0) {
-                            int newAgeState = ageState + 1;
+                            int newAgeState = (age / AgeState.getStageDuration()) + 5;
                             VillagerLike sampleMan = VillagerLike.toVillager(serverPlayer);
                             sampleMan.setAgeState(AgeState.byId(newAgeState));
                             sampleMan.randomizeClothes();
@@ -62,7 +62,8 @@ public class MCAGrowthEvents {
                             }
                         }
                         updatePlayerAttributes(serverPlayer);
-                        playerVData.putInt("Age", age + tickFreq);
+                        int modAge = age + tickFreq - (age % tickFreq);
+                        playerVData.putInt("Age", modAge);
                         serverPlayer.serverLevel().players().forEach(p ->
                                 NetworkHandler.sendToPlayer(
                                         new PlayerDataMessage(serverPlayer.getUUID(), playerVData),
