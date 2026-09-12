@@ -1,7 +1,6 @@
 package net.dannyfather.mca_descendants.network.s2c;
 
 
-import forge.net.mca.network.NbtDataMessage;
 import net.dannyfather.mca_descendants.ClientProxy;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;

@@ -1,12 +1,5 @@
 package net.dannyfather.mca_descendants.network.c2s;
 
-import forge.net.mca.entity.EntitiesMCA;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.AgeState;
-import forge.net.mca.entity.ai.relationship.Gender;
-import forge.net.mca.server.ServerInteractionManager;
-import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
-import net.dannyfather.mca_descendants.util.ModUtils;
 import net.dannyfather.mca_descendants.worldgen.teleporters.SimpleTeleporter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;

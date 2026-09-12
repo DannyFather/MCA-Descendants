@@ -1,13 +1,20 @@
 package net.dannyfather.mca_descendants.events;
 
-import forge.net.mca.entity.VillagerLike;
-import forge.net.mca.server.world.data.FamilyTree;
-import forge.net.mca.server.world.data.FamilyTreeNode;
-import forge.net.mca.server.world.data.PlayerSaveData;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.majesttyx.mcacapitals.capital.CapitalFoundationService;
+import com.majesttyx.mcacapitals.capital.CapitalManager;
+import com.majesttyx.mcacapitals.capital.CapitalRecord;
+import com.majesttyx.mcacapitals.util.MCAIntegrationBridge;
+import forge.net.conczin.mca.cobalt.network.NetworkHandler;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerLike;
+import forge.net.conczin.mca.entity.ai.relationship.Gender;
+import forge.net.conczin.mca.network.s2c.PlayerDataMessage;
+import forge.net.conczin.mca.server.world.data.FamilyTree;
+import forge.net.conczin.mca.server.world.data.FamilyTreeNode;
+import forge.net.conczin.mca.server.world.data.PlayerSaveData;
 import net.dannyfather.mca_descendants.MCADescendants;
-import net.dannyfather.mca_descendants.block.ModBlocks;
-import net.dannyfather.mca_descendants.block.custom.PhoneBlock;
-import net.dannyfather.mca_descendants.client.gui.PhoneScreen;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.effects.ModEffects;
 import net.dannyfather.mca_descendants.network.ModNetwork;
@@ -22,6 +29,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.ChatType;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.OutgoingChatMessage;
 import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.resources.ResourceKey;
@@ -36,6 +44,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Bee;
@@ -81,6 +90,7 @@ import org.apache.logging.log4j.core.jmx.Server;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -104,27 +114,53 @@ public class MCADescendantsEvents {
         if(event.getEntity().level() instanceof ServerLevel serverLevel) {
             if(event.getEntity() instanceof ServerPlayer player) {
                 if (serverLevel.getLevelData().isHardcore() || !MCADescendantsCommonConfig.HARDCORE_ONLY.get()) {
-                    if (!ModList.get().isLoaded("sync")) {
+                    if (!ModList.get().isLoaded("sync") || !ModList.get().isLoaded("regen")) {
+                        player.setRespawnPosition(player.level().dimension(),player.blockPosition(),player.getXRot(),true,false);
                         FamilyTree tree = FamilyTree.get(serverLevel);
                         FamilyTreeNode playerNode = tree.getOrEmpty(player.getUUID()).get();
-                        int childrenCount = playerNode.children().size();
-                        CHILDREN_COUNT.put(player.getUUID(), childrenCount);
+                        int childrenCount = ((int) playerNode.getChildren().count());
                         int grandchildrenCount = getGrandchildren(playerNode, serverLevel).size();
-                        GRANDCHILDREN_COUNT.put(player.getUUID(), grandchildrenCount);
                         String deathMsg = event.getSource().getLocalizedDeathMessage(player).getString();
-                        LAST_DEATH_MESSAGE.put(player.getUUID(), deathMsg);
                         String villagerName = PlayerSaveData.get(player).getEntityData().getString("villagerName");
-                        LAST_VILLAGER_NAME.put(player.getUUID(), villagerName);
-                        if(!PlayerSaveData.get(player).getEntityData().getString("villagerName").equals("Soul")) {
-                            Entity soul = ModUtils.summonSoul(player, serverLevel);
-                            soul.moveTo(player.blockPosition(), player.getYRot(), player.getXRot());
-                            serverLevel.addFreshEntity(soul);
-                            ModUtils.evilSwapVillagerAndPlayer(((LivingEntity) soul), player, event.getSource());
-                        } else {
-                            int deathCount = player.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
-                            player.getStats().setValue(player,Stats.CUSTOM.get(Stats.DEATHS),deathCount - 1);
+                        MinecraftServer server = player.getServer();
+                        if(ModList.get().isLoaded("mcacapitals")) {
+                            CapitalRecord capital = CapitalManager.getCapitalForResident(player.getUUID());
+                            if(capital != null && capital.isPlayerSovereign() && capital.getPlayerSovereignId().equals(player.getUUID())){
+                                capital.setPlayerSovereign(false);
+                                capital.setPlayerSovereignId(null);
+                                capital.setPlayerSovereignName(null);
+                            }
                         }
-                        player.setRespawnPosition(player.level().dimension(),player.blockPosition(),player.getXRot(),true,false);
+                        server.execute(() -> {
+                            if(!playerNode.getName().equals("Soul")) {
+                                CHILDREN_COUNT.put(player.getUUID(), childrenCount);
+                                GRANDCHILDREN_COUNT.put(player.getUUID(), grandchildrenCount);
+                                LAST_DEATH_MESSAGE.put(player.getUUID(), deathMsg);
+                                LAST_VILLAGER_NAME.put(player.getUUID(), villagerName);
+                                Entity soul = ModUtils.summonSoul(player, serverLevel);
+                                soul.moveTo(player.blockPosition(), player.getYRot(), player.getXRot());
+                                serverLevel.addFreshEntity(soul);
+
+                                if(ModList.get().isLoaded("mcacapitals")) {
+                                    CapitalRecord capital = CapitalManager.getCapitalForResident(player.getUUID());
+                                    if(capital != null && capital.getSovereign().equals(player.getUUID())){
+                                        capital.setSovereign(soul.getUUID());
+                                    }
+                                }
+                                ModUtils.evilSwapVillagerAndPlayer(((LivingEntity) soul), player, event.getSource());
+
+                                if(!serverLevel.getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) {
+                                    player.getInventory().dropAll();
+                                    int xp = player.getExperienceReward();
+                                    if (xp > 0) {
+                                        ExperienceOrb.award(serverLevel, player.blockPosition().getCenter(), xp);
+                                    }
+                                }
+
+                                int deathCount = player.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
+                                player.getStats().setValue(player,Stats.CUSTOM.get(Stats.DEATHS),deathCount + 1);
+                            }
+                        });
                     }
 
                 }
@@ -274,8 +310,10 @@ public class MCADescendantsEvents {
                 }
             }
             if(entity instanceof ServerPlayer serverPlayer) {
-                if(MCADescendantsCommonConfig.INSTANT_RESPAWN.get() && !ModList.get().isLoaded("sync")/* &&(serverLevel.getLevelData().isHardcore() || !MCADescendantsCommonConfig.HARDCORE_ONLY.get())*/) {
-                    serverLevel.getGameRules().getRule(GameRules.RULE_DO_IMMEDIATE_RESPAWN).set(true,serverPlayer.server);
+                if (serverLevel.getLevelData().isHardcore() || !MCADescendantsCommonConfig.HARDCORE_ONLY.get()) {
+                    if (!ModList.get().isLoaded("sync") || !ModList.get().isLoaded("regen")) {
+                        serverLevel.getGameRules().getRule(GameRules.RULE_DO_IMMEDIATE_RESPAWN).set(MCADescendantsCommonConfig.INSTANT_RESPAWN.get(), serverPlayer.server);
+                    }
                 }
                 FamilyTreeNode playerNode = tree.getOrCreate(serverPlayer);
                 if (ghostTeam instanceof PlayerTeam playerTeam) {
@@ -288,7 +326,15 @@ public class MCADescendantsEvents {
                 }
 
                 if (!PlayerSaveData.get(serverPlayer).getEntityData().getString("villagerName").equals(playerNode.getName())) {
-                    playerNode.setName(PlayerSaveData.get(serverPlayer).getEntityData().getString("villagerName"));
+                    CompoundTag entityData = PlayerSaveData.get(serverPlayer).getEntityData();
+                    entityData.putString("villagerName", playerNode.getName());
+                    PlayerSaveData.get(serverPlayer).setEntityData(entityData);
+                    serverLevel.players().forEach(p ->
+                            NetworkHandler.sendToPlayer(
+                                    new PlayerDataMessage(serverPlayer.getUUID(), entityData),
+                                    p
+                            )
+                    );
                 }
                 UUID id = serverPlayer.getUUID();
                 Set<UUID> descendantSet = new HashSet<>();
@@ -324,7 +370,7 @@ public class MCADescendantsEvents {
         Iterator<Map.Entry<UUID, Integer>> lIt = LOADING_TICKS.entrySet().iterator();
 
         while (it.hasNext()) {
-            Map.Entry<UUID,Integer> entry = it.next();
+            Map.Entry<UUID, Integer> entry = it.next();
 
             int time = entry.getValue() - 1;
 
@@ -332,7 +378,7 @@ public class MCADescendantsEvents {
                 ServerPlayer player = event.getServer().getPlayerList().getPlayer(entry.getKey());
                 ServerLevel serverLevel = player.serverLevel();
 
-                if(MCADescendantsCommonConfig.RESPAWN_IN_AFTERLIFE.get()) {
+                if (MCADescendantsCommonConfig.RESPAWN_IN_AFTERLIFE.get()) {
                     String soulName = LAST_VILLAGER_NAME.get(player.getUUID());
                     FamilyTree tree = FamilyTree.get(serverLevel);
 
@@ -396,7 +442,7 @@ public class MCADescendantsEvents {
                             new OpenGuiRequest(OpenGuiRequest.Type.PHONE, 0)
                     );
                     player.closeContainer();
-                    LOADING_TICKS.put(player.getUUID(),40);
+                    LOADING_TICKS.put(player.getUUID(), 40);
                 }
                 it.remove();
             } else {
@@ -406,10 +452,10 @@ public class MCADescendantsEvents {
 
         }
 
-        while(lIt.hasNext()) {
-            Map.Entry<UUID,Integer> entry = lIt.next();
+        while (lIt.hasNext()) {
+            Map.Entry<UUID, Integer> entry = lIt.next();
             int time = entry.getValue() - 1;
-            if(time <= 0) {
+            if (time <= 0) {
                 ServerPlayer player = event.getServer().getPlayerList().getPlayer(entry.getKey());
                 ModNetwork.CHANNEL.send(
                         PacketDistributor.PLAYER.with(() -> player),
@@ -420,7 +466,9 @@ public class MCADescendantsEvents {
                 entry.setValue(time);
             }
         }
+
     }
+
 
 
 }

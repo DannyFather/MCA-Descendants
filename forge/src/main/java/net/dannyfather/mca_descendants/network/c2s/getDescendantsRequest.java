@@ -1,9 +1,9 @@
 package net.dannyfather.mca_descendants.network.c2s;
 
-import forge.net.mca.entity.VillagerLike;
-import forge.net.mca.server.world.data.FamilyTree;
-import forge.net.mca.server.world.data.FamilyTreeNode;
-import forge.net.mca.server.world.data.PlayerSaveData;
+import forge.net.conczin.mca.entity.VillagerLike;
+import forge.net.conczin.mca.server.world.data.FamilyTree;
+import forge.net.conczin.mca.server.world.data.FamilyTreeNode;
+import forge.net.conczin.mca.server.world.data.PlayerSaveData;
 import net.dannyfather.mca_descendants.MCADescendants;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.network.ModNetwork;
@@ -26,17 +26,18 @@ import org.apache.logging.log4j.core.jmx.Server;
 import org.objectweb.asm.commons.SerialVersionUIDAdder;
 
 import java.io.Serial;
+import java.io.Serializable;
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.stream.Stream;import static forge.net.mca.MCAClient.playerData;
+import java.util.stream.Stream;
 
-public class getDescendantsRequest {
+public class getDescendantsRequest implements Serializable {
     @Serial
     private static final long serialVersionUID = 5658784094255697697L;
     public static final List<ChunkPos> FORCED_CHUNKS = List.of();
 
     public static Set<UUID> getGrandchildren(FamilyTreeNode node, ServerLevel serverLevel){
-        Iterator<UUID> childrenIterator = node.getChildren().iterator();
+        Iterator<UUID> childrenIterator = node.streamChildren().iterator();
         FamilyTree tree = FamilyTree.get(serverLevel);
         Set<UUID> grandchildrenSet = new HashSet<>();
         while (childrenIterator.hasNext()) {

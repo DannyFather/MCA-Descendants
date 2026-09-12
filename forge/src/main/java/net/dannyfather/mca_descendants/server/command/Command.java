@@ -5,11 +5,11 @@ import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import forge.net.mca.cobalt.network.NetworkHandler;
-import forge.net.mca.entity.ai.relationship.AgeState;
-import forge.net.mca.network.s2c.PlayerDataMessage;
-import forge.net.mca.server.world.data.FamilyTree;
-import forge.net.mca.server.world.data.PlayerSaveData;
+import forge.net.conczin.mca.cobalt.network.NetworkHandler;
+import forge.net.conczin.mca.entity.ai.relationship.AgeState;
+import forge.net.conczin.mca.network.s2c.PlayerDataMessage;
+import forge.net.conczin.mca.server.world.data.FamilyTree;
+import forge.net.conczin.mca.server.world.data.PlayerSaveData;
 import net.dannyfather.mca_descendants.network.ModNetwork;
 import net.dannyfather.mca_descendants.network.s2c.OpenGuiRequest;
 import net.dannyfather.mca_descendants.sound.ModSounds;
@@ -28,6 +28,7 @@ import net.minecraftforge.network.PacketDistributor;
 
 import java.util.Objects;
 
+import static net.dannyfather.mca_descendants.events.MCAGrowthEvents.tickFreq;
 import static net.dannyfather.mca_descendants.events.MCAGrowthEvents.updatePlayerAttributes;
 import static net.minecraft.ChatFormatting.*;
 import static net.minecraft.ChatFormatting.GOLD;
@@ -128,8 +129,9 @@ public class Command {
     private static void ageStateCommand(CommandContext<CommandSourceStack> ctx, int aState) throws CommandSyntaxException {
         ServerPlayer player = EntityArgument.getPlayer(ctx, "Player");
         CompoundTag playerVData = PlayerSaveData.get(player).getEntityData();
-        int age = - ((5 - aState) * AgeState.getStageDuration());
+        int age = - (2 * tickFreq) - ((5 - aState) * AgeState.getStageDuration());
         playerVData.putInt("Age", age);
+        PlayerSaveData.get(player).setEntityData(playerVData);
         player.serverLevel().players().forEach(p ->
                 NetworkHandler.sendToPlayer(
                         new PlayerDataMessage(player.getUUID(), playerVData),

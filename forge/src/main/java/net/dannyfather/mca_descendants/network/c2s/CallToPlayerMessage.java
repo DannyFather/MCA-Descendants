@@ -1,12 +1,17 @@
 package net.dannyfather.mca_descendants.network.c2s;
 
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.server.world.data.FamilyTree;
-import forge.net.mca.server.world.data.PlayerSaveData;
+import com.majesttyx.mcacapitals.capital.*;
+import com.majesttyx.mcacapitals.data.CapitalDataAccess;
+import com.majesttyx.mcacapitals.util.MCAIntegrationBridge;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerLike;
+import forge.net.conczin.mca.entity.ai.relationship.Gender;
+import forge.net.conczin.mca.server.world.data.PlayerSaveData;
 import harmonised.pmmo.core.Core;
 import harmonised.pmmo.core.IDataStorage;
 import harmonised.pmmo.network.Networking;
 import harmonised.pmmo.network.clientpackets.CP_SyncData_ClearXp;
+import net.dannyfather.mca_descendants.events.MCADescendantsEvents;
 import net.dannyfather.mca_descendants.events.MCAGrowthEvents;
 import net.dannyfather.mca_descendants.util.ModUtils;
 import net.dannyfather.mca_descendants.worldgen.teleporters.SimpleTeleporter;
@@ -18,12 +23,15 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.DelayQueue;
 import java.util.function.Supplier;
 
 import static net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig.INSTANT_GROWTH;
@@ -87,20 +95,35 @@ public class CallToPlayerMessage {
                     targetLevel,
                     new SimpleTeleporter(v.getX(), v.getY(), v.getZ())
             );
-            ModUtils.goodSwapVillagerAndPlayer(v, player);
 
             MinecraftServer server = player.server;
+
+            if(ModList.get().isLoaded("mcacapitals")) {
+                Integer villageId = MCAIntegrationBridge.getVillageIdForResident(targetLevel,v.getUUID());
+                CapitalRecord capital = CapitalManager.getCapitalByVillageId(villageId);
+                boolean gender = v.getGenetics().getGender().equals(Gender.FEMALE);
+                if (capital != null && capital.getSovereign().equals(v.getUUID())) {
+                    capital.clearCrownStandings();
+                    capital.setPlayerSovereign(true);
+                    capital.setPlayerSovereignId(player.getUUID());
+                    capital.setPlayerSovereignName(v.getName().getString());
+                    capital.setSovereign(player.getUUID());
+                    capital.setSovereignFemale(gender);
+                }
+            }
+
+            ModUtils.goodSwapVillagerAndPlayer(v,player);
             if(ModList.get().isLoaded("corpse")){
                 server.getAllLevels().forEach(level -> {
                     level.getAllEntities().forEach( entity -> {
-                        CompoundTag entityNBT = entity.serializeNBT();
-                        if(entityNBT.getString("id").equals("corpse:corpse")) {
-                            if(entityNBT.getInt("Age") < 72000) {
-                                entityNBT.putInt("Age",72000);
+                                CompoundTag entityNBT = entity.serializeNBT();
+                                if(entityNBT.getString("id").equals("corpse:corpse")) {
+                                    if(entityNBT.getInt("Age") < 72000) {
+                                        entityNBT.putInt("Age",72000);
+                                    }
+                                    entity.deserializeNBT(entityNBT);
+                                }
                             }
-                            entity.deserializeNBT(entityNBT);
-                        }
-                    }
                     );
                 });
 
@@ -114,6 +137,7 @@ public class CallToPlayerMessage {
                 Networking.sendToClient(new CP_SyncData_ClearXp(), player);
             }
         });
+
 
         ctx.get().setPacketHandled(true);
     }

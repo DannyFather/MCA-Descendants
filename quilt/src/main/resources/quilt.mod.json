@@ -15,7 +15,7 @@
     "intermediate_mappings": "net.fabricmc:intermediary",
     "entrypoints": {
       "init": [
-        "net.dannyfather.quilt.ExampleModQuilt"
+        "com.example.quilt.ExampleModQuilt"
       ]
     },
     "depends": [

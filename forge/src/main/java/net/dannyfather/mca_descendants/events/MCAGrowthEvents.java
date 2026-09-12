@@ -1,12 +1,13 @@
 package net.dannyfather.mca_descendants.events;
 
-import com.google.common.graph.Network;
-import forge.net.mca.cobalt.network.NetworkHandler;
-import forge.net.mca.entity.VillagerLike;
-import forge.net.mca.entity.ai.relationship.AgeState;
-import forge.net.mca.network.s2c.PlayerDataMessage;
-import forge.net.mca.server.world.data.PlayerSaveData;
+import com.majesttyx.mcacapitals.capital.CapitalRecord;
+import forge.net.conczin.mca.cobalt.network.NetworkHandler;
+import forge.net.conczin.mca.entity.VillagerLike;
+import forge.net.conczin.mca.entity.ai.relationship.AgeState;
+import forge.net.conczin.mca.network.s2c.PlayerDataMessage;
+import forge.net.conczin.mca.server.world.data.PlayerSaveData;
 import net.dannyfather.mca_descendants.MCADescendants;
+import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.entity.BabySittingEntity;
 import net.dannyfather.mca_descendants.entity.ModEntities;
 import net.minecraft.core.BlockPos;
@@ -18,8 +19,8 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityMountEvent;
-import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -30,27 +31,28 @@ import static net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig.
 
 @Mod.EventBusSubscriber(modid = MCADescendants.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class MCAGrowthEvents {
+    public static int tickFreq = 100;
     @SubscribeEvent
-    public static void TickEvent(LivingEvent.LivingTickEvent event) {
+    public static void TickEvent(TickEvent.PlayerTickEvent event) {
         if (PLAYER_GROWTH.get()) {
-            Entity entity = event.getEntity();
+            Entity entity = event.player;
             if (entity instanceof ServerPlayer serverPlayer) {
-                int tickFreq = 100;
                 //every 100 ticks = 5 seconds
                 if (serverPlayer.tickCount % tickFreq == 0) {
                     CompoundTag playerVData = PlayerSaveData.get(serverPlayer).getEntityData();
-                    int ageState = playerVData.getInt("ageState");
+                    int ageState = playerVData.getInt("AgeState");
+                    int age = playerVData.getInt("Age");
 
-                    if (ageState != 0 && ageState != 5) {
-
-                        int age = playerVData.getInt("Age");
+                    if (ageState != 0 && age <= 0) {
                         if (age % AgeState.getStageDuration() == 0) {
                             int newAgeState = (age / AgeState.getStageDuration()) + 5;
-                            VillagerLike sampleMan = VillagerLike.toVillager(serverPlayer);
+                            VillagerLike<?> sampleMan = VillagerLike.toVillager(serverPlayer);
                             sampleMan.setAgeState(AgeState.byId(newAgeState));
                             sampleMan.randomizeClothes();
-                            playerVData.putInt("ageState", newAgeState);
-                            playerVData.putString("clothes", sampleMan.getClothes());
+                            playerVData.putInt("AgeState", newAgeState);
+                            if(newAgeState < 5) {
+                                playerVData.putString("Clothes", sampleMan.getClothes());
+                            }
                             if (newAgeState == 2) {
                                 serverPlayer.displayClientMessage(Component.translatable("actionbar.ages.toddler"), true);
                             } else if (newAgeState == 3) {
@@ -64,6 +66,7 @@ public class MCAGrowthEvents {
                         updatePlayerAttributes(serverPlayer);
                         int modAge = age + tickFreq - (age % tickFreq);
                         playerVData.putInt("Age", modAge);
+                        PlayerSaveData.get(serverPlayer).setEntityData(playerVData);
                         serverPlayer.serverLevel().players().forEach(p ->
                                 NetworkHandler.sendToPlayer(
                                         new PlayerDataMessage(serverPlayer.getUUID(), playerVData),
@@ -76,21 +79,23 @@ public class MCAGrowthEvents {
 
                 //instant events
                 CompoundTag playerVData = PlayerSaveData.get(serverPlayer).getEntityData();
-                int ageState = playerVData.getInt("ageState");
-                if (ageState == 1) {
-                    if (serverPlayer.getVehicle() == null && serverPlayer.gameMode.getGameModeForPlayer().equals(GameType.SURVIVAL)) {
-                        serverPlayer.serverLevel().getAllEntities().forEach(e -> {
-                            if (e instanceof BabySittingEntity babySeat && babySeat.getPassengers().isEmpty()) {
-                                babySeat.discard();
-                            }
-                        });
-                        BabySittingEntity babySeat = new BabySittingEntity(ModEntities.BABY_SEAT.get(), serverPlayer.serverLevel());
-                        Vec3 pos = new Vec3(serverPlayer.getX(), serverPlayer.getY(), serverPlayer.getZ());
-                        babySeat.setPos(pos.x + 0.01, pos.y + 0.01, pos.z + 0.01);
-                        serverPlayer.serverLevel().addFreshEntity(babySeat);
-                        serverPlayer.startRiding(babySeat, false);
-                    }
+                int ageState = playerVData.getInt("AgeState");
+                if(!BABY_MOVEMENT.get()) {
+                    if (ageState == 1) {
+                        if (serverPlayer.getVehicle() == null && serverPlayer.gameMode.getGameModeForPlayer().equals(GameType.SURVIVAL)) {
+                            serverPlayer.serverLevel().getAllEntities().forEach(e -> {
+                                if (e instanceof BabySittingEntity babySeat && babySeat.getPassengers().isEmpty()) {
+                                    babySeat.discard();
+                                }
+                            });
+                            BabySittingEntity babySeat = new BabySittingEntity(ModEntities.BABY_SEAT.get(), serverPlayer.serverLevel());
+                            Vec3 pos = new Vec3(serverPlayer.getX(), serverPlayer.getY(), serverPlayer.getZ());
+                            babySeat.setPos(pos.x + 0.01, pos.y + 0.01, pos.z + 0.01);
+                            serverPlayer.serverLevel().addFreshEntity(babySeat);
+                            serverPlayer.startRiding(babySeat, true);
+                        }
 
+                    }
                 }
             }
         }
@@ -105,7 +110,7 @@ public class MCAGrowthEvents {
 
     public static void updatePlayerAttributes(ServerPlayer serverPlayer) {
         CompoundTag playerVData = PlayerSaveData.get(serverPlayer).getEntityData();
-        int ageState = playerVData.getInt("ageState");
+        int ageState = playerVData.getInt("AgeState");
         AttributeInstance playerSpeed = serverPlayer.getAttribute(Attributes.MOVEMENT_SPEED);
         AttributeInstance playerHealth = serverPlayer.getAttribute(Attributes.MAX_HEALTH);
         if (playerSpeed != null && playerHealth != null) {
@@ -124,7 +129,7 @@ public class MCAGrowthEvents {
             } else if (ageState == 4) {
                 playerSpeed.setBaseValue(0.1 * TEEN_SPEED.get());
                 playerHealth.setBaseValue(TEEN_HEALTH.get());
-            } else {
+            } else if (ageState == 5) {
                 playerSpeed.setBaseValue(0.1 * ADULT_SPEED.get());
                 playerHealth.setBaseValue(ADULT_HEALTH.get());
             }
@@ -140,7 +145,7 @@ public class MCAGrowthEvents {
 
         if (!ModList.get().isLoaded("carryon")) {
             if (entity instanceof ServerPlayer player && player.isCrouching() && targetEntity instanceof ServerPlayer childPlayer) {
-                int ageState = PlayerSaveData.get(childPlayer).getEntityData().getInt("ageState");
+                int ageState = PlayerSaveData.get(childPlayer).getEntityData().getInt("AgeState");
                 if (ageState <= 3) {
                     childPlayer.startRiding(player, true);
                 }
@@ -148,7 +153,7 @@ public class MCAGrowthEvents {
 
         }
         if (entity instanceof ServerPlayer baby) {
-            int ageState = PlayerSaveData.get(baby).getEntityData().getInt("ageState");
+            int ageState = PlayerSaveData.get(baby).getEntityData().getInt("AgeState");
             if (ageState == 1) {
                 baby.startRiding(targetEntity, false);
             }
@@ -174,7 +179,7 @@ public class MCAGrowthEvents {
         Entity entity = event.getEntityMounting();
         if (event.isDismounting() && event.getEntityBeingMounted() instanceof BabySittingEntity && entity instanceof ServerPlayer serverPlayer) {
             CompoundTag playerVData = PlayerSaveData.get(serverPlayer).getEntityData();
-            if (playerVData.getInt("ageState") == 1 && serverPlayer.gameMode.getGameModeForPlayer().equals(GameType.SURVIVAL)) {
+            if (playerVData.getInt("AgeState") == 1 && serverPlayer.gameMode.getGameModeForPlayer().equals(GameType.SURVIVAL)) {
                 serverPlayer.setOnGround(true);
             }
         }

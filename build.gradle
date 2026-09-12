@@ -1,7 +1,7 @@
 plugins {
-    id 'dev.architectury.loom' version '1.11-SNAPSHOT' apply false
-    id 'architectury-plugin' version '3.4-SNAPSHOT'
-    id 'com.gradleup.shadow' version '8.3.6' apply false
+    id 'dev.architectury.loom' version '1.17-SNAPSHOT' apply false
+    id 'architectury-plugin' version '3.5-SNAPSHOT'
+    id 'com.gradleup.shadow' version '9.4.3' apply false
 }
 
 architectury {
@@ -11,17 +11,10 @@ architectury {
 allprojects {
     group = rootProject.maven_group
     version = rootProject.mod_version
-
     repositories {
         maven {
-            name = "ParchmentMC"
+            name = 'ParchmentMC'
             url = 'https://maven.parchmentmc.org'
-        } // Add this line
-    }
-
-    tasks.withType(JavaCompile).configureEach {
-        javaCompiler = javaToolchains.compilerFor {
-            languageVersion.set(JavaLanguageVersion.of(17))
         }
     }
 }
@@ -54,7 +47,6 @@ subprojects {
             officialMojangMappings()
             parchment("org.parchmentmc.data:parchment-${rootProject.minecraft_version}:2023.09.03@zip")
         }
-        modImplementation files("libs/minecraft-comes-alive-7.6.15+1.20.1-universal.jar")
     }
 
     java {
@@ -88,5 +80,4 @@ subprojects {
             // retrieving dependencies.
         }
     }
-
 }

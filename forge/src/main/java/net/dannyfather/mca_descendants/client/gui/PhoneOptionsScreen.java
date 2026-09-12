@@ -1,30 +1,18 @@
 package net.dannyfather.mca_descendants.client.gui;
 
-import forge.net.mca.entity.EntitiesMCA;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.util.compat.ButtonWidget;
+import forge.net.conczin.mca.util.compat.ButtonWidget;
 import net.dannyfather.mca_descendants.MCADescendants;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
-import net.dannyfather.mca_descendants.network.ModNetwork;
-import net.dannyfather.mca_descendants.network.c2s.CallToPlayerMessage;
 import net.dannyfather.mca_descendants.network.c2s.RandomToPlayerMessage;
 import net.dannyfather.mca_descendants.network.c2s.SpectateWorldMessage;
-import net.dannyfather.mca_descendants.network.c2s.getDescendantsRequest;
-import net.dannyfather.mca_descendants.network.s2c.OpenGuiRequest;
 import net.dannyfather.mca_descendants.sound.ModSounds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.InventoryScreen;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.Pose;
-import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.network.PacketDistributor;
-import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
 
 import java.util.ArrayList;

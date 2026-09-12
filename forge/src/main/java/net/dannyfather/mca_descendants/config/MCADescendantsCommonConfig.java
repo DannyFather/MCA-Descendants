@@ -18,6 +18,7 @@ public class MCADescendantsCommonConfig {
     public static final ForgeConfigSpec.ConfigValue<Boolean> PLAYER_GROWTH;
 
     //speed modifiers
+    public static final ForgeConfigSpec.ConfigValue<Boolean> BABY_MOVEMENT;
     public static final ForgeConfigSpec.ConfigValue<Double> BABY_SPEED;
     public static final ForgeConfigSpec.ConfigValue<Double> TODDLER_SPEED;
     public static final ForgeConfigSpec.ConfigValue<Double> CHILD_SPEED;
@@ -58,6 +59,7 @@ public class MCADescendantsCommonConfig {
         PLAYER_GROWTH = BUILDER.define("Player Growth", true);
 
         //speed
+        BABY_MOVEMENT = BUILDER.comment("Enables the ability to walk as a baby").define("Baby Movement",false);
         BABY_SPEED = BUILDER.comment("Adjust speed modifiers of each age state").define("Baby Movement Speed",0.0);
         TODDLER_SPEED = BUILDER.define("Toddler Movement Speed", 0.2);
         CHILD_SPEED = BUILDER.define("Child Movement Speed", 0.9);

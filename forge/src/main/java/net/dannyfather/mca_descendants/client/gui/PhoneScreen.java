@@ -1,8 +1,8 @@
 package net.dannyfather.mca_descendants.client.gui;
 
-import forge.net.mca.entity.EntitiesMCA;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.util.compat.ButtonWidget;
+import forge.net.conczin.mca.entity.EntitiesMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.util.compat.ButtonWidget;
 import net.dannyfather.mca_descendants.MCADescendants;
 import net.dannyfather.mca_descendants.network.ModNetwork;
 import net.dannyfather.mca_descendants.network.c2s.CallToPlayerMessage;

@@ -1,17 +1,25 @@
 package net.dannyfather.mca_descendants.util;
 
-import forge.net.mca.cobalt.network.NetworkHandler;
-import forge.net.mca.entity.EntitiesMCA;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.VillagerLike;
-import forge.net.mca.entity.ai.Genetics;
-import forge.net.mca.entity.ai.relationship.Gender;
-import forge.net.mca.entity.ai.relationship.RelationshipState;
-import forge.net.mca.network.c2s.VillagerEditorSyncRequest;
-import forge.net.mca.network.s2c.PlayerDataMessage;
-import forge.net.mca.server.world.data.FamilyTree;
-import forge.net.mca.server.world.data.FamilyTreeNode;
-import forge.net.mca.server.world.data.PlayerSaveData;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.majesttyx.mcacapitals.capital.CapitalCourtWatcher;
+import com.majesttyx.mcacapitals.capital.CapitalFoundationService;
+import com.majesttyx.mcacapitals.capital.CapitalManager;
+import com.majesttyx.mcacapitals.capital.CapitalRecord;
+import com.majesttyx.mcacapitals.data.CapitalDataAccess;
+import com.majesttyx.mcacapitals.util.MCAIntegrationBridge;
+import forge.net.conczin.mca.cobalt.network.NetworkHandler;
+import forge.net.conczin.mca.entity.EntitiesMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerLike;
+import forge.net.conczin.mca.entity.ai.Genetics;
+import forge.net.conczin.mca.entity.ai.relationship.Gender;
+import forge.net.conczin.mca.entity.ai.relationship.RelationshipState;
+import forge.net.conczin.mca.network.c2s.VillagerEditorSyncRequest;
+import forge.net.conczin.mca.network.s2c.PlayerDataMessage;
+import forge.net.conczin.mca.server.world.data.FamilyTree;
+import forge.net.conczin.mca.server.world.data.FamilyTreeNode;
+import forge.net.conczin.mca.server.world.data.PlayerSaveData;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.server.world.data.DescendantLocationData;
 import net.minecraft.core.BlockPos;
@@ -21,6 +29,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stat;
@@ -45,6 +54,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.Team;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 
 import java.util.HashSet;
@@ -53,14 +63,20 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import static forge.net.mca.entity.ai.Traits.*;
+import static forge.net.conczin.mca.entity.ai.Traits.ASEXUAL;
+import static forge.net.conczin.mca.entity.ai.Traits.COLOR_BLIND;
 import static net.dannyfather.mca_descendants.events.MCADescendantsEvents.LAST_DEATH_MESSAGE;
 public class ModUtils {
     public static void swapVillagerAndPlayer(LivingEntity target, ServerPlayer pPlayer) {
         if (pPlayer.level() instanceof ServerLevel serverLevel) {
             if (target instanceof VillagerEntityMCA villagerEntityMCA) {
-                //villager to player
                 FamilyTree tree = FamilyTree.get(serverLevel);
+                FamilyTreeNode playerNode = tree.getOrCreate(pPlayer);
+                //ensure player is properly named
+                String pVName = playerNode.getName();
+                pPlayer.setCustomName(Component.literal(pVName));
+
+                //villager to player
                 CompoundTag playerVillagerData = VillagerLike.toVillager(pPlayer).asEntity().serializeNBT();
                 CompoundTag villagerMCAData = villagerEntityMCA.serializeNBT();
                 playerVillagerData.remove("UUID");
@@ -71,11 +87,14 @@ public class ModUtils {
                 if (PlayerSaveData.get(pPlayer).getEntityData().getInt("playerModel") >= 1) {
                     playerVillagerData.putString("custom_skin", pPlayer.getName().getString());
                 }
+                playerVillagerData.remove("villagerName");
+                playerVillagerData.putString("villagerName",pVName);
                 //player into villager
                 Entity newVillagerEntity = EntityType.loadEntityRecursive(playerVillagerData, serverLevel, (e) -> {
                     return e;
                 });
                 newVillagerEntity.moveTo(target.getOnPos().above(), target.getYRot(), target.getXRot());
+                Component vName = villagerEntityMCA.getCustomName();
                 villagerEntityMCA.discard();
                 serverLevel.addFreshEntity(newVillagerEntity);
                 serverLevel.players().forEach(p ->
@@ -86,12 +105,13 @@ public class ModUtils {
                 );
                 PlayerSaveData.get(pPlayer).setEntityData(villagerMCAData);
 
-                pPlayer.setCustomName(villagerEntityMCA.getCustomName());
+                pPlayer.setCustomName(vName);
+                villagerEntityMCA.setName(pVName);
+                villagerEntityMCA.setCustomName(Component.literal(pVName));
 
                 //
                 //Family Tree Stuff
                 //
-                FamilyTreeNode playerNode = tree.getOrEmpty(pPlayer.getUUID()).orElse(null);
                 FamilyTreeNode villagerNode = tree.getOrEmpty(target.getUUID()).orElse(null);
                 Gender playerNodeGender = playerNode.gender();
                 Gender villagerNodeGender = villagerNode.gender();
@@ -122,7 +142,7 @@ public class ModUtils {
                 //swap spouses
                 FamilyTreeNode pSpouse = tree.getOrEmpty(playerNode.partner()).orElse(null);
                 FamilyTreeNode vSpouse = tree.getOrEmpty(villagerNode.partner()).orElse(null);
-                playerNode.updatePartner(null,RelationshipState.SINGLE);
+                playerNode.updatePartner(null, RelationshipState.SINGLE);
                 villagerNode.updatePartner(null,RelationshipState.SINGLE);
 
                 if (pSpouse != null) {
@@ -179,6 +199,10 @@ public class ModUtils {
                     playerNode.children().add(vchildUUID);
                 }
 
+                if(vName != null) {
+                    playerNode.setName(vName.getString());
+                }
+
 
             }
         }
@@ -198,8 +222,13 @@ public class ModUtils {
                     DescendantLocationData data = DescendantLocationData.get(pPlayer.serverLevel());
                     data.update(entity, pPlayer.getUUID());
                 }
+
                 if(entity instanceof LivingEntity livingEntity){
-                    livingEntity.hurt(source, livingEntity.getMaxHealth() + 500f);
+                    MinecraftServer server = pPlayer.getServer();
+                    server.execute(()->{
+                        livingEntity.hurt(source, livingEntity.getMaxHealth() + 500f);
+                    });
+
                 }
             }
 
@@ -216,7 +245,7 @@ public class ModUtils {
             Entity entity = serverLevel.getEntity(villagerUUID);
             pPlayer.teleportTo(targetPos.x,targetPos.y,targetPos.z);
             pPlayer.removeAllEffects();
-            pPlayer.setGameMode(GameType.SURVIVAL);
+            pPlayer.setGameMode(pPlayer.getServer().getDefaultGameType());
             FamilyTree tree = FamilyTree.get(serverLevel);
             tree.remove(entity.getUUID());
             entity.discard();
@@ -244,10 +273,12 @@ public class ModUtils {
         if (PlayerSaveData.get(serverPlayer).getEntityData().getInt("playerModel") >= 1) {
             soulNBTData.putString("custom_skin", serverPlayer.getName().getString());
         }
-        Entity soulEntity = EntityType.loadEntityRecursive(soulNBTData, serverLevel, (e) -> {
-            return e;
-        });
-        VillagerEntityMCA soulNPC = (VillagerEntityMCA) soulEntity;
+
+        VillagerEntityMCA soulNPC = EntitiesMCA.FEMALE_VILLAGER.get().create(serverLevel);
+        if(soulNBTData.getInt("gender")==1) {
+            soulNPC = EntitiesMCA.MALE_VILLAGER.get().create(serverLevel);
+        };
+        soulNPC.load(soulNBTData);
         assert soulNPC != null;
         soulNPC.setCustomNameVisible(true);
         soulNPC.setCustomName(Component.literal("Soul"));
@@ -255,7 +286,7 @@ public class ModUtils {
         soulNPC.getTraits().addTrait(COLOR_BLIND);
         soulNPC.getGenetics().setGene(Genetics.SKIN, 0f);
         soulNPC.moveTo(serverPlayer.position());
-        return soulEntity;
+        return soulNPC;
     }
 
     public static void placeBookOnLectern(ServerLevel world, BlockPos pos, String playerName,int childrenCount,int grandchildrenCount, ServerPlayer pPlayer) {
@@ -355,7 +386,6 @@ public class ModUtils {
         if (father != null) father.children().remove(node.id());
         if (mother != null) mother.children().remove(node.id());
     }
-
 
 
 }

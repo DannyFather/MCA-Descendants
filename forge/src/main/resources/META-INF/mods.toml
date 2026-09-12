@@ -30,7 +30,7 @@ side = "BOTH"
 [[dependencies.mca_descendants]]
 modId = "mca"
 mandatory = true
-versionRange = "[7.6.15,)"
+versionRange = "[7.7.0,)"
 ordering = "NONE"
 side = "BOTH"
 
@@ -45,6 +45,13 @@ side = "BOTH"
 modId = "sync"
 mandatory = false
 versionRange = "[0.1.8,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.mca_descendants]]
+modId = "regen"
+mandatory = false
+versionRange = "[42.1.1,)"
 ordering = "NONE"
 side = "BOTH"
 
