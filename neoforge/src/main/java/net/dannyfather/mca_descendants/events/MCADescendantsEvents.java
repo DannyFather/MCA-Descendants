@@ -1,5 +1,7 @@
 package net.dannyfather.mca_descendants.events;
 
+import com.majesttyx.mcacapitals.capital.CapitalManager;
+import com.majesttyx.mcacapitals.capital.CapitalRecord;
 import net.conczin.mca.entity.VillagerEntityMCA;
 import net.conczin.mca.entity.VillagerLike;
 import net.conczin.mca.server.world.data.FamilyTree;
@@ -102,11 +104,25 @@ public class MCADescendantsEvents {
                         String villagerName = player.getCustomName().getString();
                         LAST_VILLAGER_NAME.put(player.getUUID(), villagerName);
                         player.setRespawnPosition(player.level().dimension(),player.blockPosition(),0F,true,false);
+                        if(ModList.get().isLoaded("mcacapitals")) {
+                            CapitalRecord capital = CapitalManager.getCapitalForResident(player.getUUID());
+                            if(capital != null && capital.isPlayerSovereign() && capital.getPlayerSovereignId().equals(player.getUUID())){
+                                capital.setPlayerSovereign(false);
+                                capital.setPlayerSovereignId(null);
+                                capital.setPlayerSovereignName(null);
+                            }
+                        }
                         if(player.hasCustomName()) {
                             if(!player.getCustomName().getString().equals("\uD83D\uDC7B")){
                                 Entity soul = ModUtils.summonSoul(player, serverLevel);
                                 soul.moveTo(player.blockPosition(), player.getYRot(), player.getXRot());
                                 serverLevel.addFreshEntity(soul);
+                                if(ModList.get().isLoaded("mcacapitals")) {
+                                    CapitalRecord capital = CapitalManager.getCapitalForResident(player.getUUID());
+                                    if(capital != null && capital.getSovereign().equals(player.getUUID())){
+                                        capital.setSovereign(soul.getUUID());
+                                    }
+                                }
                                 ModUtils.evilSwapVillagerAndPlayer(((LivingEntity) soul), player, event.getSource());
                                 if (ModList.get().isLoaded("corpse")) {
                                     serverLevel.getAllEntities().forEach(entity -> {

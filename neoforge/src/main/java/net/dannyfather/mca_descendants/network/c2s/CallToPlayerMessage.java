@@ -1,11 +1,15 @@
 package net.dannyfather.mca_descendants.network.c2s;
 
+import com.majesttyx.mcacapitals.capital.CapitalManager;
+import com.majesttyx.mcacapitals.capital.CapitalRecord;
+import com.majesttyx.mcacapitals.util.MCAIntegrationBridge;
 import harmonised.pmmo.commands.CmdNodeAdmin;
 import harmonised.pmmo.core.Core;
 import harmonised.pmmo.core.IDataStorage;
 import harmonised.pmmo.network.Networking;
 import harmonised.pmmo.network.clientpackets.CP_SyncData_ClearXp;
 import net.conczin.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.ai.relationship.Gender;
 import net.conczin.mca.network.Network;
 import net.conczin.mca.network.c2s.GetFamilyTreeRequest;
 import net.conczin.mca.server.world.data.FamilyTree;
@@ -97,6 +101,19 @@ public record CallToPlayerMessage(UUID uuid) implements HandleablePayload {
                     player.getXRot()
             );
 
+            if(ModList.get().isLoaded("mcacapitals")) {
+                Integer villageId = MCAIntegrationBridge.getVillageIdForResident(targetLevel,v.getUUID());
+                CapitalRecord capital = CapitalManager.getCapitalByVillageId(villageId);
+                boolean gender = v.getGenetics().getGender().equals(Gender.FEMALE);
+                if (capital != null && capital.getSovereign().equals(v.getUUID())) {
+                    capital.clearCrownStandings();
+                    capital.setPlayerSovereign(true);
+                    capital.setPlayerSovereignId(player.getUUID());
+                    capital.setPlayerSovereignName(v.getName().getString());
+                    capital.setSovereign(player.getUUID());
+                    capital.setSovereignFemale(gender);
+                }
+            }
 
             server.execute(()->{
                 ModUtils.goodSwapVillagerAndPlayer(v, player);
