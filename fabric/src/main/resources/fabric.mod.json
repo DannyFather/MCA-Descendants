@@ -2,34 +2,34 @@
   "schemaVersion": 1,
   "id": "mca_descendants",
   "version": "${version}",
-  "name": "MCA Descendants",
-  "description": "Addon for MCA:Reborn. Adds the ability to respawn as your descendants while playing hardcore mode.",
+  "name": "ExampleMod",
+  "description": "This is an example description! Tell everyone what your mod is about!",
   "authors": [
-    "DannyFather"
+    "Me!"
   ],
   "contact": {
     "homepage": "https://fabricmc.net/",
     "sources": "https://github.com/FabricMC/fabric-example-mod"
   },
   "license": "CC0-1.0",
-  "icon": "",
+  "icon": "assets/mca_descendants/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
-      "net.dannyfather.mca_descendants.fabric.MCADescendantsFabric"
+      "net.dannyfather.mca_descendants.fabric.ExampleModFabric"
     ],
     "client": [
-      "net.dannyfather.mca_descendants.fabric.client.MCADescendantsFabricClient"
+      "net.dannyfather.mca_descendants.fabric.client.ExampleModFabricClient"
     ]
   },
   "mixins": [
     "mca_descendants.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.19.2",
+    "fabricloader": ">=0.19.5",
     "minecraft": "~1.21.1",
     "java": ">=21",
-    "architectury": ">=13.0.8",
+    "architectury": ">=13.0.11",
     "fabric-api": "*"
   },
   "suggests": {

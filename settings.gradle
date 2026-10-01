@@ -10,5 +10,4 @@ pluginManagement {
 rootProject.name = 'mca_descendants'
 
 include 'common'
-include 'fabric'
 include 'neoforge'

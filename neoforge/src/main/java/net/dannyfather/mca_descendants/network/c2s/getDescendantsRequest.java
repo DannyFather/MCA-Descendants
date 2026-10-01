@@ -5,6 +5,7 @@ import net.conczin.mca.server.world.data.FamilyTree;
 import net.conczin.mca.server.world.data.FamilyTreeNode;
 import net.conczin.mca.server.world.data.PlayerSaveData;
 import net.dannyfather.mca_descendants.MCADescendants;
+import net.dannyfather.mca_descendants.attachments.ModAttachments;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.network.HandleablePayload;
 import net.dannyfather.mca_descendants.network.ModNetwork;
@@ -68,8 +69,11 @@ public record getDescendantsRequest() implements HandleablePayload {
         Map<UUID,String> villagerNames = new HashMap<>();
         FamilyTree tree = FamilyTree.get(player.serverLevel());
         FamilyTreeNode soulNode = tree.getOrCreate(player);
-        if(player.hasCustomName() && player.getCustomName().getString().equals("\uD83D\uDC7B")) {
-            soulNode = tree.getOrEmpty(PlayerSaveData.get(player).getEntityData().getUUID("UUID")).get();
+        if(player.hasCustomName() && player.getCustomName() != null && player.getCustomName().getString().equals("\uD83D\uDC7B")) {
+            FamilyTreeNode prevNode = tree.getOrEmpty(player.getData(ModAttachments.VILLAGERUUID)).orElse(null);
+            if(prevNode != null){
+                soulNode = prevNode;
+            }
         }
         FamilyTreeNode playerNode = soulNode;
 

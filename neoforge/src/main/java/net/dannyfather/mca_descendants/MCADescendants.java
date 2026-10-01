@@ -1,6 +1,7 @@
 package net.dannyfather.mca_descendants;
 
 import com.mojang.logging.LogUtils;
+import net.dannyfather.mca_descendants.attachments.ModAttachments;
 import net.dannyfather.mca_descendants.block.ModBlocks;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.effects.ModEffects;
@@ -44,6 +45,7 @@ public class MCADescendants {
         ModEntities.register(modEventBus);
         ModSounds.register(modEventBus);
         ModEffects.register(modEventBus);
+        ModAttachments.ATTACHMENTS.register(modEventBus);
 
 
         modContainer.registerConfig(

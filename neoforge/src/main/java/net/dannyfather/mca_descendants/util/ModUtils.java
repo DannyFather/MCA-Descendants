@@ -13,6 +13,7 @@ import net.conczin.mca.server.world.data.FamilyTree;
 import net.conczin.mca.server.world.data.FamilyTreeNode;
 import net.conczin.mca.server.world.data.PlayerSaveData;
 import net.dannyfather.mca_descendants.MCADescendants;
+import net.dannyfather.mca_descendants.attachments.ModAttachments;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.server.world.StructureSpawnData;
 import net.dannyfather.mca_descendants.server.world.data.DescendantLocationData;
@@ -45,6 +46,7 @@ import net.minecraft.world.level.block.state.properties.RedstoneSide;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Scoreboard;
+import net.neoforged.fml.ModList;
 
 import java.util.*;
 
@@ -64,8 +66,10 @@ public class ModUtils {
                 VillagerLike.toVillager(pPlayer).asEntity().save(playerVillagerData);
                 villagerEntityMCA.save(villagerMCAData);
 
+
+                UUID targetUUID = target.getUUID();
                 playerVillagerData.remove("UUID");
-                playerVillagerData.putUUID("UUID", target.getUUID());
+                playerVillagerData.putUUID("UUID", targetUUID);
 
                 /*if (!villagerMCAData.getString("custom_skin").isEmpty()) {
                     villagerMCAData.putInt("PlayerModel", 1);
@@ -180,6 +184,10 @@ public class ModUtils {
 
                     playerNode.children().add(vchildUUID);
                 }
+
+                //some extra code for townstead compat because the developer dared to fuck around with family tree shit
+                pPlayer.removeData(ModAttachments.VILLAGERUUID.get());
+                pPlayer.setData(ModAttachments.VILLAGERUUID.get(), targetUUID);
 
             }
         }
