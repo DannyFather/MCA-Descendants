@@ -1,13 +1,9 @@
 package net.dannyfather.mca_descendants.events;
 
-import net.conczin.mca.MCA;
 import net.conczin.mca.entity.VillagerLike;
 import net.conczin.mca.entity.ai.relationship.AgeState;
-import net.conczin.mca.entity.ai.relationship.Gender;
 import net.conczin.mca.network.Network;
 import net.conczin.mca.network.s2c.PlayerDataMessage;
-import net.conczin.mca.registry.EntitiesMCA;
-import net.conczin.mca.resources.ClothingList;
 import net.conczin.mca.server.world.data.PlayerSaveData;
 import net.dannyfather.mca_descendants.MCADescendants;
 import net.dannyfather.mca_descendants.entity.BabySittingEntity;
@@ -15,35 +11,20 @@ import net.dannyfather.mca_descendants.entity.ModEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityMountEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
-import tschipp.carryon.common.carry.CarryOnData;
-import tschipp.carryon.common.carry.CarryOnDataManager;
-import tschipp.carryon.common.carry.PickupHandler;
-import tschipp.carryon.common.carry.PlacementHandler;
-import tschipp.carryon.events.EntityPickupEvent;
 
-import static com.mojang.text2speech.Narrator.LOGGER;
 import static net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig.*;
 
 @EventBusSubscriber(modid = MCADescendants.MOD_ID)

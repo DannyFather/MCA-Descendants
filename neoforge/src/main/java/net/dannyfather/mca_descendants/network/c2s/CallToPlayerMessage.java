@@ -3,7 +3,6 @@ package net.dannyfather.mca_descendants.network.c2s;
 import com.majesttyx.mcacapitals.capital.CapitalManager;
 import com.majesttyx.mcacapitals.capital.CapitalRecord;
 import com.majesttyx.mcacapitals.util.MCAIntegrationBridge;
-import harmonised.pmmo.commands.CmdNodeAdmin;
 import harmonised.pmmo.core.Core;
 import harmonised.pmmo.core.IDataStorage;
 import harmonised.pmmo.network.Networking;
@@ -28,18 +27,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.RelativeMovement;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.GameType;
-import net.minecraft.world.level.portal.DimensionTransition;
-import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.LogicalSide;
 import net.neoforged.fml.ModList;
 
 import java.util.HashMap;
-import java.util.Set;
 import java.util.UUID;
 
 import static net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig.*;

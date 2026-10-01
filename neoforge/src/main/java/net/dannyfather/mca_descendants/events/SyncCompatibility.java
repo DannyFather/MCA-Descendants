@@ -4,39 +4,25 @@ package net.dannyfather.mca_descendants.events;
 import com.breakinblocks.neosync.api.shell.Shell;
 import net.conczin.mca.server.world.data.FamilyTree;
 import net.conczin.mca.server.world.data.FamilyTreeNode;
-import net.conczin.mca.server.world.data.PlayerSaveData;
 import net.dannyfather.mca_descendants.MCADescendants;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
-import net.dannyfather.mca_descendants.effects.ModEffects;
-import net.dannyfather.mca_descendants.server.world.data.DescendantLocationData;
 import net.dannyfather.mca_descendants.util.ModUtils;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.GameRules;
-import net.minecraft.world.level.GameType;
-import net.minecraft.world.scores.PlayerTeam;
-import net.minecraft.world.scores.Scoreboard;
-import net.minecraft.world.scores.Team;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
 import static net.dannyfather.mca_descendants.events.MCADescendantsEvents.*;
 import static net.dannyfather.mca_descendants.network.c2s.getDescendantsRequest.getGrandchildren;
-import static net.minecraft.ChatFormatting.DARK_AQUA;
 
 
 @EventBusSubscriber(modid = MCADescendants.MOD_ID)

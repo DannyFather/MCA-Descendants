@@ -1,4 +1,4 @@
-package net.dannyfather.fabric.client;
+package net.dannyfather.mca_descendants.fabric.client;
 
 import net.fabricmc.api.ClientModInitializer;
 

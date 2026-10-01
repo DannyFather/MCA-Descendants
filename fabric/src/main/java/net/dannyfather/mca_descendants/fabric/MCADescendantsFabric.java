@@ -1,8 +1,8 @@
-package net.dannyfather.fabric;
+package net.dannyfather.mca_descendants.fabric;
 
 import net.fabricmc.api.ModInitializer;
 
-import net.dannyfather.MCADescendants;
+import net.dannyfather.mca_descendants.ExampleMod;
 
 public final class MCADescendantsFabric implements ModInitializer {
     @Override
@@ -12,6 +12,6 @@ public final class MCADescendantsFabric implements ModInitializer {
         // Proceed with mild caution.
 
         // Run our common setup.
-        MCADescendants.init();
+        ExampleMod.init();
     }
 }

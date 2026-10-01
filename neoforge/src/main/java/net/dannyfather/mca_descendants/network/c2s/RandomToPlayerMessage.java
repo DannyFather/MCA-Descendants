@@ -8,7 +8,6 @@ import net.conczin.mca.entity.VillagerEntityMCA;
 import net.conczin.mca.entity.VillagerLike;
 import net.conczin.mca.entity.ai.relationship.AgeState;
 import net.conczin.mca.network.Network;
-import net.conczin.mca.network.c2s.GetFamilyTreeRequest;
 import net.conczin.mca.network.s2c.PlayerDataMessage;
 import net.conczin.mca.server.ServerInteractionManager;
 import net.conczin.mca.server.world.data.FamilyTree;
@@ -36,7 +35,6 @@ import net.neoforged.fml.ModList;
 
 import java.util.HashMap;
 
-import static com.mojang.text2speech.Narrator.LOGGER;
 import static java.util.UUID.randomUUID;
 import static net.conczin.mca.entity.ai.Traits.ASEXUAL;
 import static net.conczin.mca.entity.ai.Traits.COLOR_BLIND;

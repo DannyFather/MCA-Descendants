@@ -1,21 +1,16 @@
 package net.dannyfather.mca_descendants.client.gui;
 
 import net.conczin.mca.util.compat.ButtonWidget;
-import net.dannyfather.mca_descendants.MCADescendants;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.network.ModNetwork;
 import net.dannyfather.mca_descendants.network.c2s.RandomToPlayerMessage;
 import net.dannyfather.mca_descendants.network.c2s.SpectateWorldMessage;
-import net.dannyfather.mca_descendants.network.c2s.getDescendantsRequest;
-import net.dannyfather.mca_descendants.network.s2c.OpenGuiRequest;
 import net.dannyfather.mca_descendants.sound.ModSounds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.common.EventBusSubscriber;
 import org.joml.Quaternionf;
 
 import java.util.Objects;

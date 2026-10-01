@@ -3,7 +3,6 @@ package net.dannyfather.mca_descendants.network.c2s;
 import net.dannyfather.mca_descendants.MCADescendants;
 import net.dannyfather.mca_descendants.network.HandleablePayload;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -11,8 +10,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.GameType;
-
-import java.util.function.Supplier;
 
 public class SpectateWorldMessage implements HandleablePayload {
     public static final CustomPacketPayload.Type<SpectateWorldMessage> TYPE = new CustomPacketPayload.Type<>(MCADescendants.locate("spectate_world"));

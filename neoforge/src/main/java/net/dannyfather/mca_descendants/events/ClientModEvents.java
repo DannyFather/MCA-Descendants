@@ -5,7 +5,6 @@ import net.dannyfather.mca_descendants.block.ModBlocks;
 import net.dannyfather.mca_descendants.client.gui.PhoneScreen;
 import net.dannyfather.mca_descendants.entity.ModEntities;
 import net.dannyfather.mca_descendants.entity.layers.BabySittingRenderer;
-import net.dannyfather.mca_descendants.network.s2c.OpenGuiRequest;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.client.color.item.ItemColors;
@@ -17,10 +16,8 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
-import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
-import static net.dannyfather.MCADescendants.MOD_ID;
+import static net.dannyfather.mca_descendants.MCADescendants.MOD_ID;
 
 @EventBusSubscriber(modid = MOD_ID, value = Dist.CLIENT)
 public class ClientModEvents {

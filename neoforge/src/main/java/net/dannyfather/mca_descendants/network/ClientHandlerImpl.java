@@ -6,10 +6,6 @@ import net.dannyfather.mca_descendants.network.s2c.OpenGuiRequest;
 import net.dannyfather.mca_descendants.network.s2c.getDescendantResponse;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.common.EventBusSubscriber;
-
-import static net.dannyfather.MCADescendants.MOD_ID;
 
 public class ClientHandlerImpl implements ClientHandler {
     private final Minecraft client = Minecraft.getInstance();

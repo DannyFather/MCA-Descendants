@@ -1,6 +1,6 @@
 package net.dannyfather.mca_descendants.server.command;
 
-import net.dannyfather.MCADescendants;
+import net.dannyfather.mca_descendants.MCADescendants;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
