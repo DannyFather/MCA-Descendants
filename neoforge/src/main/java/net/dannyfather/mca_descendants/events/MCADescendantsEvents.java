@@ -4,9 +4,16 @@ import com.majesttyx.mcacapitals.capital.CapitalManager;
 import com.majesttyx.mcacapitals.capital.CapitalRecord;
 import net.conczin.mca.entity.VillagerEntityMCA;
 import net.conczin.mca.entity.VillagerLike;
+import net.conczin.mca.entity.ai.Genetics;
+import net.conczin.mca.entity.ai.Traits;
+import net.conczin.mca.registry.EntitiesMCA;
 import net.conczin.mca.server.world.data.FamilyTree;
 import net.conczin.mca.server.world.data.FamilyTreeNode;
 import net.conczin.mca.server.world.data.PlayerSaveData;
+import net.dannyfather.mca_butchery.config.MCAButcheryCommonConfig;
+import net.dannyfather.mca_butchery.item.MCAButcheryItems;
+import net.dannyfather.mca_butchery.network.DownloadVillagerSkinPayload;
+import net.dannyfather.mca_butchery.network.VillagerSlimPayload;
 import net.dannyfather.mca_descendants.MCADescendants;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.effects.ModEffects;
@@ -25,13 +32,19 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.Containers;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Bee;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.WrittenBookContent;
@@ -53,6 +66,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.*;
 
@@ -79,6 +93,7 @@ public class MCADescendantsEvents {
             if(event.getEntity() instanceof ServerPlayer player) {
                 if (serverLevel.getLevelData().isHardcore() || !MCADescendantsCommonConfig.HARDCORE_ONLY.get()) {
                     if (!ModList.get().isLoaded("neosync")) {
+                        int model = PlayerSaveData.get(player).getEntityData().getInt("PlayerModel");
                         FamilyTree tree = FamilyTree.get(serverLevel);
                         FamilyTreeNode playerNode = tree.getOrEmpty(player.getUUID()).get();
                         int childrenCount = playerNode.children().size();
@@ -111,7 +126,6 @@ public class MCADescendantsEvents {
                                         capital.setSovereign(soul.getUUID());
                                     }
                                 }
-                                ModUtils.evilSwapVillagerAndPlayer(((LivingEntity) soul), player, event.getSource());
                                 if (ModList.get().isLoaded("corpse")) {
                                     serverLevel.getAllEntities().forEach(entity -> {
                                         CompoundTag entityNBT = new CompoundTag();
@@ -123,6 +137,95 @@ public class MCADescendantsEvents {
                                             }
                                         }
                                     });
+                                }
+                                if (ModList.get().isLoaded("mca_butchery")) {
+                                    ItemStack itemStack = event.getSource().getWeaponItem();
+                                    if (itemStack != null && itemStack.is(ItemTags.create(ResourceLocation.parse("c:cleaver")))) {
+                                        int entityId = player.getId();
+                                        PacketDistributor.sendToPlayer(player, new DownloadVillagerSkinPayload(entityId, model));
+
+                                        BlockPos pos = player.blockPosition();
+                                        ItemStack item = MCAButcheryItems.MCAVILLAGERCORPSE.toStack();
+                                        if (model == 0) {
+                                            CompoundTag pData = new CompoundTag();
+                                            VillagerLike.toVillager(player).asEntity().save(pData);
+                                            UUID vUUID = UUID.randomUUID();
+                                            pData.remove("UUID");
+                                            pData.putUUID("UUID", vUUID);
+                                            pData.remove("id");
+                                            pData.remove("tree_mother_name");
+                                            pData.remove("tree_father_name");
+                                            pData.remove("tree_spouse_name");
+                                            pData.remove("tree_mother_UUID");
+                                            pData.remove("tree_father_UUID");
+                                            pData.remove("tree_spouse_UUID");
+                                            if (PlayerSaveData.get(player).getEntityData().getInt("playerModel") >= 1) {
+                                                pData.putString("custom_skin", player.getName().getString());
+                                            }
+                                            VillagerEntityMCA pVillager = EntitiesMCA.FEMALE_VILLAGER.create(serverLevel);
+                                            if (pData.getInt("gender") == 1) {
+                                                pVillager = EntitiesMCA.MALE_VILLAGER.create(serverLevel);
+                                            }
+                                            pVillager.load(pData);
+                                            pVillager.setCustomName(Component.literal(FamilyTree.get(serverLevel).getOrCreate(player).getName()));
+                                            pVillager.setCustomNameVisible(true);
+                                            pVillager.moveTo(player.position());
+                                            serverLevel.addFreshEntity(pVillager);
+                                            int face = (int) Math.floor((double) pVillager.getGenetics().getGene(Genetics.FACE) * 12);
+                                            switch (face) {
+                                                case 0, 1, 2, 3, 4, 5, 6 -> {
+                                                    face = 2;
+                                                }
+                                                case 7, 8, 10 -> {
+                                                    face = 1;
+                                                }
+                                                default -> {
+                                                    face = 0;
+                                                }
+
+                                            }
+                                            if (MCAButcheryCommonConfig.CLOSED_EYES.get()) {
+                                                face = 0;
+                                            }
+                                            item.set(MCAButcheryItems.FACE, face);
+                                            PacketDistributor.sendToPlayer(player, new DownloadVillagerSkinPayload(pVillager.getId(), 0));
+                                            item.set(MCAButcheryItems.VILLAGER_UUID, vUUID);
+                                            pVillager.discard();
+                                        } else {
+                                            PacketDistributor.sendToPlayer(player, new DownloadVillagerSkinPayload(entityId, 1));
+                                            item.set(MCAButcheryItems.VILLAGER_UUID, player.getUUID());
+                                            boolean isSlim = player.getPersistentData().getBoolean("Slim");
+                                            item.set(MCAButcheryItems.SLIM, isSlim);
+                                        }
+                                        String itemName = Component.translatable("block.mca_butchery.villager_corpse_named").getString().replace("{VILLAGERNAME}", villagerName);
+                                        item.set(DataComponents.CUSTOM_NAME, Component.literal(itemName).withStyle(style -> style.withItalic(false)));
+                                        if (model != 2) {
+                                            Genetics genetics = VillagerLike.toVillager(player).getGenetics();
+                                            item.set(MCAButcheryItems.B_SIZE, genetics.getBreastSize());
+                                            Traits villagerTraits = VillagerLike.toVillager(player).getTraits();
+                                            float hScale = (villagerTraits.hasTrait(Traits.DWARFISM) ? 0.65f : 1.0f) * genetics.getVerticalScaleFactor();
+                                            float wScale = (villagerTraits.hasTrait(Traits.DWARFISM) ? 0.85f : 1.0f)
+                                                    * (villagerTraits.hasTrait(Traits.TOUGH) ? 1.2F : 1.0F)
+                                                    * (villagerTraits.hasTrait(Traits.WEAK) ? 0.85F : 1.0F) * genetics.getHorizontalScaleFactor();
+                                            item.set(MCAButcheryItems.H_SIZE, hScale);
+                                            item.set(MCAButcheryItems.W_SIZE, wScale);
+                                        }
+                                        Containers.dropItemStack(serverLevel, pos.getX(), pos.getY(), pos.getZ(), item);
+                                        if (!serverLevel.getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) {
+                                            player.getInventory().dropAll();
+                                            int xp = player.getExperienceReward(serverLevel, event.getSource().getEntity());
+                                            if (xp > 0) {
+                                                ExperienceOrb.award(serverLevel, player.blockPosition().getCenter(), xp);
+                                            }
+                                        }
+                                        ModUtils.evilSwapVillagerAndPlayer(((LivingEntity) soul), player, player.damageSources().genericKill());
+                                    } else {
+
+                                        ModUtils.evilSwapVillagerAndPlayer(((LivingEntity) soul), player, event.getSource());
+                                    }
+                                } else {
+
+                                    ModUtils.evilSwapVillagerAndPlayer(((LivingEntity) soul), player, event.getSource());
                                 }
                             } else {
                                 int deathCount = player.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
@@ -142,6 +245,17 @@ public class MCADescendantsEvents {
 
 
 
+
+    @SubscribeEvent
+    public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        if(ModList.get().isLoaded("mca_butchery")) {
+            Player player = event.getEntity();
+            if (player instanceof ServerPlayer serverPlayer) {
+                int entityId = serverPlayer.getId();
+                PacketDistributor.sendToPlayer(serverPlayer, new DownloadVillagerSkinPayload(entityId, 1));
+            }
+        }
+    }
 
     @SubscribeEvent
     public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
