@@ -159,8 +159,6 @@ public class MCADescendantsEvents {
                                     }
                                 }
 
-                                int deathCount = player.getStats().getValue(Stats.CUSTOM.get(Stats.DEATHS));
-                                player.getStats().setValue(player,Stats.CUSTOM.get(Stats.DEATHS),deathCount + 1);
                             }
                         });
                     }
