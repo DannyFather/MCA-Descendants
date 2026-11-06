@@ -189,6 +189,10 @@ public class ModUtils {
                 pPlayer.removeData(ModAttachments.VILLAGERUUID.get());
                 pPlayer.setData(ModAttachments.VILLAGERUUID.get(), targetUUID);
 
+                //remove swap forcing
+                pPlayer.setData(ModAttachments.SWAPTYPE,"none");
+                pPlayer.removeData(ModAttachments.TOVILLAGER);
+
             }
         }
     }

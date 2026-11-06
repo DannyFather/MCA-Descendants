@@ -2,11 +2,15 @@ package net.dannyfather.mca_descendants.events;
 
 import com.majesttyx.mcacapitals.capital.CapitalManager;
 import com.majesttyx.mcacapitals.capital.CapitalRecord;
+import de.maxhenkel.corpse.entities.CorpseEntity;
+import net.conczin.mca.DestinyManager;
+import net.conczin.mca.client.gui.DestinyScreen;
 import net.conczin.mca.entity.VillagerEntityMCA;
 import net.conczin.mca.entity.VillagerLike;
 import net.conczin.mca.entity.ai.Genetics;
 import net.conczin.mca.entity.ai.Traits;
 import net.conczin.mca.registry.EntitiesMCA;
+import net.conczin.mca.server.ServerInteractionManager;
 import net.conczin.mca.server.world.data.FamilyTree;
 import net.conczin.mca.server.world.data.FamilyTreeNode;
 import net.conczin.mca.server.world.data.PlayerSaveData;
@@ -15,9 +19,11 @@ import net.dannyfather.mca_butchery.item.MCAButcheryItems;
 import net.dannyfather.mca_butchery.network.DownloadVillagerSkinPayload;
 import net.dannyfather.mca_butchery.network.VillagerSlimPayload;
 import net.dannyfather.mca_descendants.MCADescendants;
+import net.dannyfather.mca_descendants.attachments.ModAttachments;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.effects.ModEffects;
 import net.dannyfather.mca_descendants.network.ModNetwork;
+import net.dannyfather.mca_descendants.network.c2s.RandomToPlayerMessage;
 import net.dannyfather.mca_descendants.network.s2c.OpenGuiRequest;
 import net.dannyfather.mca_descendants.server.world.data.DescendantLocationData;
 import net.dannyfather.mca_descendants.util.ModUtils;
@@ -127,13 +133,14 @@ public class MCADescendantsEvents {
                                     }
                                 }
                                 if (ModList.get().isLoaded("corpse")) {
+
                                     serverLevel.getAllEntities().forEach(entity -> {
-                                        CompoundTag entityNBT = new CompoundTag();
-                                        entity.save(entityNBT);
-                                        if (entityNBT.getString("id").equals("corpse:corpse")) {
+                                        if (entity instanceof CorpseEntity corpseEntity) {
+                                            CompoundTag entityNBT = new CompoundTag();
+                                            corpseEntity.save(entityNBT);
                                             if (entityNBT.getCompound("Death").getString("PlayerName").equals(player.getName().getString())) {
                                                 entityNBT.getCompound("Death").putString("PlayerName", LAST_VILLAGER_NAME.get(player.getUUID()));
-                                                entity.load(entityNBT);
+                                                corpseEntity.load(entityNBT);
                                             }
                                         }
                                     });
@@ -224,7 +231,6 @@ public class MCADescendantsEvents {
                                         ModUtils.evilSwapVillagerAndPlayer(((LivingEntity) soul), player, event.getSource());
                                     }
                                 } else {
-
                                     ModUtils.evilSwapVillagerAndPlayer(((LivingEntity) soul), player, event.getSource());
                                 }
                             } else {
@@ -371,19 +377,15 @@ public class MCADescendantsEvents {
     @SubscribeEvent
     public static void TickEvent(EntityTickEvent.Post event) {
         Entity entity = event.getEntity();
-        ResourceKey afterLife = ResourceKey.create(Registries.DIMENSION, ResourceLocation.fromNamespaceAndPath(MCADescendants.MOD_ID, "afterlife"));
-
-        if(entity.level() instanceof ServerLevel serverLevel) {
-            if(entity instanceof VillagerEntityMCA villager && villager.getCustomName().getString().equals("\uD83D\uDC7B")){
+        if(entity.level() instanceof ServerLevel serverLevel && entity.tickCount % 100 == 0) {
+            ResourceKey afterLife = ResourceKey.create(Registries.DIMENSION, ResourceLocation.fromNamespaceAndPath(MCADescendants.MOD_ID, "afterlife"));
+            if(entity instanceof VillagerEntityMCA villager && villager.getCustomName() != null && villager.getCustomName().getString().equals("\uD83D\uDC7B")){
                 entity.remove(Entity.RemovalReason.DISCARDED);
             }
 
-            Scoreboard scoreboard = serverLevel.getScoreboard();
-            Team ghostTeam = scoreboard.getPlayerTeam("ghosts");
-            DescendantLocationData data = DescendantLocationData.get(serverLevel);
-            FamilyTree tree = FamilyTree.get(serverLevel);
-
+            Team ghostTeam = serverLevel.getScoreboard().getPlayerTeam("ghosts");
             if (ghostTeam == null) {
+                Scoreboard scoreboard = serverLevel.getScoreboard();
                 scoreboard.addPlayerTeam("ghosts");
                 ghostTeam = scoreboard.getPlayerTeam("ghosts");
                 if (ghostTeam instanceof PlayerTeam playerTeam){
@@ -391,6 +393,9 @@ public class MCADescendantsEvents {
                     playerTeam.setAllowFriendlyFire(false);
                 }
             }
+
+
+
 
 
             if(entity instanceof LivingEntity livingEntity && livingEntity.isAlive()){
@@ -409,6 +414,24 @@ public class MCADescendantsEvents {
             }
 
             if(entity instanceof ServerPlayer serverPlayer) {
+                if(serverPlayer.hasData(ModAttachments.SWAPTYPE) && !serverPlayer.getData(ModAttachments.SWAPTYPE).equals("none")) {
+                    String swapType = serverPlayer.getData(ModAttachments.SWAPTYPE);
+                    switch (swapType) {
+                        case "descendant" -> {
+                            if(serverPlayer.hasData(ModAttachments.TOVILLAGER)) {
+                                Entity vEntity = serverLevel.getEntity(serverPlayer.getData(ModAttachments.TOVILLAGER));
+                                if(vEntity instanceof LivingEntity livingEntity) {
+                                    ModUtils.goodSwapVillagerAndPlayer(livingEntity,serverPlayer);
+                                }
+                            }
+                        }
+                        case "destiny" -> {
+                            ModNetwork.sendToServer(new RandomToPlayerMessage());
+                        }
+                    }
+                }
+
+                FamilyTree tree = FamilyTree.get(serverLevel);
                 FamilyTreeNode playerNode = tree.getOrCreate(serverPlayer);
                 if(MCADescendantsCommonConfig.INSTANT_RESPAWN.get() && !ModList.get().isLoaded("neosync") && (serverLevel.getLevelData().isHardcore() || !MCADescendantsCommonConfig.HARDCORE_ONLY.get())) {
                     serverLevel.getGameRules().getRule(GameRules.RULE_DO_IMMEDIATE_RESPAWN).set(true,serverPlayer.server);
@@ -419,6 +442,7 @@ public class MCADescendantsEvents {
                     serverPlayer.setCustomName(Component.literal(playerNode.getName()));
                 } else {
                     if (ghostTeam instanceof PlayerTeam playerTeam) {
+                        Scoreboard scoreboard = serverLevel.getScoreboard();
                         if (!serverPlayer.getCustomName().getString().equals("\uD83D\uDC7B")) {
                             scoreboard.removePlayerFromTeam(serverPlayer.getName().getString());
                         } else {
@@ -434,16 +458,16 @@ public class MCADescendantsEvents {
                 getValidRespawnCandidates(playerNode, serverLevel).forEach(descendantSet::add);
                 for (UUID uuid : descendantSet) {
                     Entity e = serverLevel.getEntity(uuid);
-                    if (e instanceof VillagerLike<?>){
-                        if(e.isAlive()) {
-                            if(serverPlayer.tickCount % 100 == 0) {
+                    if (e instanceof VillagerLike<?>) {
+                        if (e.isAlive()) {
+                            if (serverPlayer.tickCount % 100 == 0) {
+                                DescendantLocationData data = DescendantLocationData.get(serverLevel);
                                 data.update(e, id);
 
                             }
                         }
                     }
                 }
-
 
             }
             if(serverLevel.dimension() == afterLife) {

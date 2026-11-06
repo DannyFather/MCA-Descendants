@@ -68,27 +68,23 @@ public class MCAGrowthEvents {
                             serverPlayer.serverLevel().players().forEach(p -> Network.sendToPlayer(new PlayerDataMessage(serverPlayer.getUUID(), playerVData), p));
                         }
                     }
+                    if (ageState == 1) {
+                        if (serverPlayer.getVehicle() == null && serverPlayer.gameMode.getGameModeForPlayer().equals(GameType.SURVIVAL)) {
+                            serverPlayer.serverLevel().getAllEntities().forEach(e -> {
+                                if (e instanceof BabySittingEntity babySeat && babySeat.getPassengers().isEmpty()) {
+                                    babySeat.discard();
+                                }
+                            });
+                            BabySittingEntity babySeat = new BabySittingEntity(ModEntities.BABY_SEAT.get(), serverPlayer.serverLevel());
+                            Vec3 pos = new Vec3(serverPlayer.getX(), serverPlayer.getY(), serverPlayer.getZ());
+                            babySeat.setPos(pos.x + 0.01, pos.y + 0.01, pos.z + 0.01);
+                            serverPlayer.serverLevel().addFreshEntity(babySeat);
+                            serverPlayer.startRiding(babySeat, false);
+                        }
 
-                }
-
-                //instant events
-                CompoundTag playerVData = PlayerSaveData.get(serverPlayer).getEntityData();
-                int ageState = playerVData.getInt("AgeState");
-                if (ageState == 1) {
-                    if (serverPlayer.getVehicle() == null && serverPlayer.gameMode.getGameModeForPlayer().equals(GameType.SURVIVAL)) {
-                        serverPlayer.serverLevel().getAllEntities().forEach(e -> {
-                            if (e instanceof BabySittingEntity babySeat && babySeat.getPassengers().isEmpty()) {
-                                babySeat.discard();
-                            }
-                        });
-                        BabySittingEntity babySeat = new BabySittingEntity(ModEntities.BABY_SEAT.get(), serverPlayer.serverLevel());
-                        Vec3 pos = new Vec3(serverPlayer.getX(), serverPlayer.getY(), serverPlayer.getZ());
-                        babySeat.setPos(pos.x + 0.01, pos.y + 0.01, pos.z + 0.01);
-                        serverPlayer.serverLevel().addFreshEntity(babySeat);
-                        serverPlayer.startRiding(babySeat, false);
                     }
-
                 }
+
             }
         }
     }

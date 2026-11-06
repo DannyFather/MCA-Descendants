@@ -14,6 +14,7 @@ import net.conczin.mca.server.world.data.FamilyTree;
 import net.conczin.mca.server.world.data.FamilyTreeNode;
 import net.conczin.mca.server.world.data.PlayerSaveData;
 import net.dannyfather.mca_descendants.MCADescendants;
+import net.dannyfather.mca_descendants.attachments.ModAttachments;
 import net.dannyfather.mca_descendants.config.MCADescendantsCommonConfig;
 import net.dannyfather.mca_descendants.events.MCAGrowthEvents;
 import net.dannyfather.mca_descendants.network.HandleablePayload;
@@ -34,6 +35,7 @@ import net.neoforged.fml.LogicalSide;
 import net.neoforged.fml.ModList;
 
 import java.util.HashMap;
+import java.util.UUID;
 
 import static java.util.UUID.randomUUID;
 import static net.conczin.mca.entity.ai.Traits.ASEXUAL;
@@ -55,6 +57,8 @@ public class RandomToPlayerMessage implements HandleablePayload {
         MinecraftServer server = serverPlayer.getServer();
         assert server != null;
         ServerLevel serverLevel = server.getLevel(ServerLevel.OVERWORLD);
+        serverPlayer.setData(ModAttachments.SWAPTYPE,"destiny");
+        serverPlayer.removeData(ModAttachments.TOVILLAGER);
 
         BlockPos respawnPos = serverLevel.getSharedSpawnPos();
 
@@ -132,6 +136,7 @@ public class RandomToPlayerMessage implements HandleablePayload {
             MCAGrowthEvents.updatePlayerAttributes(serverPlayer);
 
             ServerInteractionManager.launchDestiny(serverPlayer);
+            serverPlayer.setData(ModAttachments.SWAPTYPE,"none");
 
 
             serverPlayer.getServer().getAllLevels().forEach(level -> {

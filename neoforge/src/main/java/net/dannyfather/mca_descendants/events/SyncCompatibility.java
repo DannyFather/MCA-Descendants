@@ -95,7 +95,7 @@ public class SyncCompatibility {
     public static void TickEvent(EntityTickEvent.Post event) {
         if (ModList.get().isLoaded("neosync")) {
             Entity entity = event.getEntity();
-            if (entity.level() instanceof ServerLevel serverLevel) {
+            if (entity.level() instanceof ServerLevel serverLevel && entity.tickCount % 100 == 0) {
                 if (entity instanceof ServerPlayer serverPlayer) {
                     serverLevel.getGameRules().getRule(GameRules.RULE_DO_IMMEDIATE_RESPAWN).set(false, serverPlayer.server);
                 }

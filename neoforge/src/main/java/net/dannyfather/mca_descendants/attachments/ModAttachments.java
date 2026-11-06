@@ -1,5 +1,6 @@
 package net.dannyfather.mca_descendants.attachments;
 
+import com.mojang.serialization.Codec;
 import net.dannyfather.mca_descendants.MCADescendants;
 import net.minecraft.core.UUIDUtil;
 import net.neoforged.neoforge.attachment.AttachmentType;
@@ -20,6 +21,22 @@ public class ModAttachments {
             ATTACHMENTS.register("prev_villager_uuid", () ->
                     AttachmentType.builder(UUID::randomUUID)
                             .serialize(UUIDUtil.CODEC)
+                            .copyOnDeath()
+                            .build()
+            );
+
+    public static final Supplier<AttachmentType<UUID>> TOVILLAGER =
+            ATTACHMENTS.register("villager_to_spawn", () ->
+                    AttachmentType.builder(UUID::randomUUID)
+                            .serialize(UUIDUtil.CODEC)
+                            .copyOnDeath()
+                            .build()
+            );
+
+    public static final Supplier<AttachmentType<String>> SWAPTYPE =
+            ATTACHMENTS.register("descendant_respawn_type", () ->
+                    AttachmentType.builder(() -> "none")
+                            .serialize(Codec.STRING)
                             .copyOnDeath()
                             .build()
             );

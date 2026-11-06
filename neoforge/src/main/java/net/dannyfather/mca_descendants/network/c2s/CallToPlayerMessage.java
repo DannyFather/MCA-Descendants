@@ -13,6 +13,7 @@ import net.conczin.mca.network.Network;
 import net.conczin.mca.network.c2s.GetFamilyTreeRequest;
 import net.conczin.mca.server.world.data.FamilyTree;
 import net.dannyfather.mca_descendants.MCADescendants;
+import net.dannyfather.mca_descendants.attachments.ModAttachments;
 import net.dannyfather.mca_descendants.events.MCAGrowthEvents;
 import net.dannyfather.mca_descendants.network.HandleablePayload;
 import net.dannyfather.mca_descendants.server.world.data.DescendantLocationData;
@@ -53,6 +54,8 @@ public record CallToPlayerMessage(UUID uuid) implements HandleablePayload {
         }
 
         if (e instanceof VillagerEntityMCA v) {
+//            player.setData(ModAttachments.SWAPTYPE.get(), "descendant");
+//            player.setData(ModAttachments.TOVILLAGER.get(), v.getUUID());
             MinecraftServer server = v.getServer();
             if (v.isSleeping()) {
                 v.stopSleeping();
