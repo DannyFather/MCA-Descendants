@@ -51,6 +51,9 @@ subprojects {
         compileOnly(files("${rootProject.projectDir}/libs/townstead-0.7.6+1.21.1.jar"))
         compileOnly(files("${rootProject.projectDir}/libs/Patchouli-1.21.1-93-NEOFORGE.jar"))
         compileOnly(files("${rootProject.projectDir}/libs/mca_butchery-neoforge-1.2.0.jar"))
+        compileOnly(files("${rootProject.projectDir}/libs/overgeared-neoforge-1.21.1-1.6.19.jar"))
+        compileOnly(files("${rootProject.projectDir}/libs/corpse-neoforge-1.21.1-1.1.13.jar"))
+        modImplementation(files("${rootProject.projectDir}/libs/overgeared-neoforge-1.21.1-1.6.19.jar"))
 
     }
 
