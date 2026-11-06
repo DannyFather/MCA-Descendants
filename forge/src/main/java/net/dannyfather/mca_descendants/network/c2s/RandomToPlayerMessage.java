@@ -56,6 +56,8 @@ public class RandomToPlayerMessage {
         ctx.get().enqueueWork(() -> {
             ServerPlayer player = ctx.get().getSender();
             if (player == null) return;
+            player.getPersistentData().putString("descendant_respawn_type","destiny");
+            player.getPersistentData().remove("villager_to_spawn");
 
             MinecraftServer server = player.getServer();
             ServerLevel serverLevel = server.getLevel(ServerLevel.OVERWORLD);
@@ -103,6 +105,8 @@ public class RandomToPlayerMessage {
                 player.setCustomName(rVName);
                 player.setGameMode(server.getDefaultGameType());
                 ServerInteractionManager.launchDestiny(player);
+                player.getPersistentData().remove("villager_to_spawn");
+                player.getPersistentData().putString("descendant_respawn_type","none");
             }
 
 

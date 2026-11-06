@@ -202,6 +202,8 @@ public class ModUtils {
                 if(vName != null) {
                     playerNode.setName(vName.getString());
                 }
+                pPlayer.getPersistentData().remove("villager_to_spawn");
+                pPlayer.getPersistentData().putString("descendant_respawn_type","none");
 
 
             }
