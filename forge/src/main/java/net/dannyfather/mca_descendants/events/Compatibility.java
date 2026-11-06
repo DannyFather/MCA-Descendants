@@ -3,6 +3,7 @@ package net.dannyfather.mca_descendants.events;
 
 import com.majesttyx.mcacapitals.capital.CapitalManager;
 import com.majesttyx.mcacapitals.capital.CapitalRecord;
+import com.majesttyx.mcacapitals.house.PlayerHouseService;
 import forge.net.conczin.mca.server.world.data.FamilyTree;
 import forge.net.conczin.mca.server.world.data.FamilyTreeNode;
 import forge.net.conczin.mca.server.world.data.PlayerSaveData;
@@ -15,9 +16,11 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -135,11 +138,31 @@ public class Compatibility {
 
     @SubscribeEvent
     public static void TickEvent(LivingEvent.LivingTickEvent event) {
-        Entity entity = event.getEntity();
-        if (entity.level() instanceof ServerLevel serverLevel) {
-            if (entity instanceof ServerPlayer serverPlayer) {
-                if (ModList.get().isLoaded("sync")) {
+        if (ModList.get().isLoaded("sync")) {
+            Entity entity = event.getEntity();
+            if (entity.level() instanceof ServerLevel serverLevel) {
+                if (entity instanceof ServerPlayer serverPlayer && serverPlayer.tickCount % 100 == 0) {
                     serverLevel.getGameRules().getRule(GameRules.RULE_DO_IMMEDIATE_RESPAWN).set(false, serverPlayer.server);
+                }
+            }
+        }
+        if(ModList.get().isLoaded("overgeared")) {
+            if(event.getEntity() instanceof ServerPlayer player) {
+                if (player.tickCount % 100 == 0) {
+                    ItemStack item = player.getMainHandItem();
+                    if (item.hasTag() && item.getTag().contains("Creator")) {
+                        String creator = item.getTag().getString("Creator");
+                        String treeName = FamilyTree.get(player.serverLevel()).getOrCreate(player).getName();
+                        if(ModList.get().isLoaded("mcacapitals")) {
+                            String houseName = PlayerHouseService.get(player.serverLevel(), player.getUUID()).getHouseName();
+                            treeName = treeName + " " + houseName;
+                        }if (treeName != null) {
+                            if (creator.equals(player.getGameProfile().getName()) && !creator.equals(treeName)) {
+                                item.getTag().putString("Creator", treeName);
+                                player.setItemInHand(InteractionHand.MAIN_HAND, item);
+                            }
+                        }
+                    }
                 }
             }
         }

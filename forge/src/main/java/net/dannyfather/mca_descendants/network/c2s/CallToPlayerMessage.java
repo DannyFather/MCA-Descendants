@@ -70,6 +70,9 @@ public class CallToPlayerMessage {
                 return;
             }
 
+            player.getPersistentData().putString("descendant_respawn_type","descendants");
+            player.getPersistentData().putUUID("villager_to_spawn",v.getUUID());
+
             if (v.isSleeping()) {
                 v.stopSleeping();
             }
